@@ -1,22 +1,5 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/d7M8Pab7)
-# **Term Project**
+# Vue 3 + TypeScript + Vite
 
-**Hello, students!** 👋
+This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
 
-Your **Term Project** is an essential part of the course. Please review the instructions carefully to ensure a smooth and successful experience.
-
-- [**Project Instructions**](https://gvsu-cis658.github.io/project/term.html)
-
-### **Getting Started:**
-
-1. **Read** the full instructions carefully.
-2. **Understand** all requirements before starting.
-3. **Ask questions** if anything is unclear.
-
-### **Tips for Success:**
-
-- Follow guidelines closely.
-- Plan your work and stay on schedule.
-- Test your project regularly.
-
-Best of luck! 🚀
+Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).

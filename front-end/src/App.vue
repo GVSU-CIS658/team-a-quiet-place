@@ -1,22 +1,9 @@
 <template>
   <v-app>
-    <router-view />
+    <RouterView />
   </v-app>
 </template>
 
 <script setup lang="ts">
+import { RouterView } from 'vue-router'
 </script>
-
-<style>
-html,
-body,
-#app {
-  margin: 0;
-  padding: 0;
-  min-height: 100%;
-}
-
-body {
-  background: #f5f8fc;
-}
-</style>

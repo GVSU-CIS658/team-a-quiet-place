@@ -2,10 +2,10 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
 import App from './App.vue'
-import router from './router'
-import vuetify from './plugins/vuetify'
+import router from './nav/navigation'
+import vuetify from './vueti/vuetify'
 
-import { useAuthStore } from './stores/auth'
+import { useAuthStore } from './pinia/authentication'
 
 const app = createApp(App)
 
@@ -13,7 +13,6 @@ app.use(createPinia())
 app.use(router)
 app.use(vuetify)
 
-// initialize firebase auth listener
 const authStore = useAuthStore()
 authStore.initAuth()
 

@@ -78,7 +78,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '../pinia/authentication'
 
 const router = useRouter()
 const auth = useAuthStore()

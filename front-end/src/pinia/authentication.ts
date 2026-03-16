@@ -8,7 +8,7 @@ import {
   onAuthStateChanged,
   type User,
 } from 'firebase/auth'
-import { auth } from '../lib/firebase'
+import { auth } from '../firebase/firebase'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)

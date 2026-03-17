@@ -6,12 +6,7 @@
         Save your favorite quiet spots and build your own list.
       </div>
 
-      <v-alert
-        v-if="auth.error"
-        type="error"
-        variant="tonal"
-        class="mb-4"
-      >
+      <v-alert v-if="auth.error" type="error" variant="tonal" class="mb-4">
         {{ auth.error }}
       </v-alert>
 
@@ -46,12 +41,7 @@
           required
         />
 
-        <v-alert
-          v-if="localError"
-          type="warning"
-          variant="tonal"
-          class="mb-4"
-        >
+        <v-alert v-if="localError" type="warning" variant="tonal" class="mb-4">
           {{ localError }}
         </v-alert>
 
@@ -76,40 +66,44 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter, RouterLink } from 'vue-router'
-import { useAuthStore } from '../pinia/authentication'
+import { ref } from "vue";
+import { useRouter, RouterLink } from "vue-router";
+import { useAuthStore } from "../stores/authStore";
 
-const router = useRouter()
-const auth = useAuthStore()
+const router = useRouter();
+const auth = useAuthStore();
 
-const email = ref('')
-const password = ref('')
-const confirmPassword = ref('')
-const localError = ref('')
+const email = ref("");
+const password = ref("");
+const confirmPassword = ref("");
+const localError = ref("");
 
 const handleSignup = async () => {
-  localError.value = ''
+  localError.value = "";
 
   if (password.value !== confirmPassword.value) {
-    localError.value = 'Passwords do not match.'
-    return
+    localError.value = "Passwords do not match.";
+    return;
   }
 
   try {
-    await auth.signup(email.value, password.value)
-    router.push('/')
+    await auth.signup(email.value, password.value);
+    router.push("/");
   } catch {
     // store already handles firebase errors
   }
-}
+};
 </script>
 
 <style scoped>
 .auth-page {
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(76, 132, 255, 0.12), transparent 35%),
+    radial-gradient(
+      circle at top left,
+      rgba(76, 132, 255, 0.12),
+      transparent 35%
+    ),
     linear-gradient(180deg, #f7faff 0%, #eef4ff 100%);
 }
 

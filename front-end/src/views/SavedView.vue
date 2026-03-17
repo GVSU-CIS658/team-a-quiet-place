@@ -3,23 +3,25 @@ import { computed, ref, watch } from "vue";
 import AppDrawer from "../components/AppDrawer.vue";
 import FilterFab from "../components/FilterFab.vue";
 import PlaceCard from "../components/PlaceCard.vue";
-import { usePlacesStore } from "../stores/placesStore";
+import { useSavedPlacesStore } from "../stores/savedPlacesStore";
 
 const drawer = ref(false);
 const slideDirection = ref("slide-left");
 const currentIndex = ref(0);
 
-const placesStore = usePlacesStore();
+const savedPlacesStore = useSavedPlacesStore();
 
-const filteredPlaces = computed(() => placesStore.filteredPlaces);
+const filteredSavedPlaces = computed(
+  () => savedPlacesStore.filteredSavedPlaces,
+);
 
 const currentPlace = computed(() => {
-  if (filteredPlaces.value.length === 0) return null;
-  return filteredPlaces.value[currentIndex.value] ?? null;
+  if (filteredSavedPlaces.value.length === 0) return null;
+  return filteredSavedPlaces.value[currentIndex.value] ?? null;
 });
 
 watch(
-  filteredPlaces,
+  filteredSavedPlaces,
   (places) => {
     if (places.length === 0) {
       currentIndex.value = 0;
@@ -34,17 +36,18 @@ watch(
 );
 
 const nextPlace = () => {
-  if (filteredPlaces.value.length === 0) return;
+  if (filteredSavedPlaces.value.length === 0) return;
   slideDirection.value = "slide-left";
-  currentIndex.value = (currentIndex.value + 1) % filteredPlaces.value.length;
+  currentIndex.value =
+    (currentIndex.value + 1) % filteredSavedPlaces.value.length;
 };
 
 const previousPlace = () => {
-  if (filteredPlaces.value.length === 0) return;
+  if (filteredSavedPlaces.value.length === 0) return;
   slideDirection.value = "slide-right";
   currentIndex.value =
-    (currentIndex.value - 1 + filteredPlaces.value.length) %
-    filteredPlaces.value.length;
+    (currentIndex.value - 1 + filteredSavedPlaces.value.length) %
+    filteredSavedPlaces.value.length;
 };
 </script>
 
@@ -53,11 +56,11 @@ const previousPlace = () => {
     <AppDrawer v-model="drawer" />
 
     <v-main>
-      <v-container class="swipe-page py-6">
+      <v-container class="saved-page py-6">
         <div class="top-bar mb-6">
           <div class="top-bar-title-wrap">
-            <div class="app-title">A Quiet Place</div>
-            <div class="app-subtitle">Find a calm corner on campus</div>
+            <div class="app-title">Saved Places</div>
+            <div class="app-subtitle">Your quiet spots, kept in one place</div>
           </div>
 
           <v-btn
@@ -95,29 +98,25 @@ const previousPlace = () => {
 
         <div v-else class="empty-state">
           <v-card rounded="xl" elevation="2" class="pa-8 text-center">
-            <div class="text-h6 font-weight-bold mb-2">No places found</div>
+            <div class="text-h6 font-weight-bold mb-2">No saved places yet</div>
             <div class="text-body-2 text-medium-emphasis mb-4">
-              Try resetting your filters.
+              Save a place from the home page and it will show up here.
             </div>
 
-            <v-btn
-              color="primary"
-              rounded="xl"
-              @click="placesStore.resetFilters()"
-            >
-              Reset filters
+            <v-btn color="primary" rounded="xl" :to="{ name: 'home' }">
+              Browse places
             </v-btn>
           </v-card>
         </div>
 
-        <FilterFab :store="placesStore" />
+        <FilterFab :store="savedPlacesStore" />
       </v-container>
     </v-main>
   </v-app>
 </template>
 
 <style scoped>
-.swipe-page {
+.saved-page {
   min-height: 100vh;
   background: linear-gradient(to bottom, #f7f9fc, #eef3f9);
 }

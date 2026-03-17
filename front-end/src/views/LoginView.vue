@@ -6,12 +6,7 @@
         Sign in to continue exploring quiet places.
       </div>
 
-      <v-alert
-        v-if="auth.error"
-        type="error"
-        variant="tonal"
-        class="mb-4"
-      >
+      <v-alert v-if="auth.error" type="error" variant="tonal" class="mb-4">
         {{ auth.error }}
       </v-alert>
 
@@ -57,31 +52,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter, RouterLink } from 'vue-router'
-import { useAuthStore } from '../pinia/authentication'
+import { ref } from "vue";
+import { useRouter, RouterLink } from "vue-router";
+import { useAuthStore } from "../stores/authStore";
 
-const router = useRouter()
-const auth = useAuthStore()
+const router = useRouter();
+const auth = useAuthStore();
 
-const email = ref('')
-const password = ref('')
+const email = ref("");
+const password = ref("");
 
 const handleLogin = async () => {
   try {
-    await auth.login(email.value, password.value)
-    router.push('/')
+    await auth.login(email.value, password.value);
+    router.push("/");
   } catch {
     // store already handles error message
   }
-}
+};
 </script>
 
 <style scoped>
 .auth-page {
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(76, 132, 255, 0.12), transparent 35%),
+    radial-gradient(
+      circle at top left,
+      rgba(76, 132, 255, 0.12),
+      transparent 35%
+    ),
     linear-gradient(180deg, #f7faff 0%, #eef4ff 100%);
 }
 

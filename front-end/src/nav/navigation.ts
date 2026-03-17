@@ -1,38 +1,46 @@
-// src/nav/nav.ts
-import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import LoginView from '../views/LoginView.vue'
-import SignupView from '../views/SignupView.vue'
-import ConnorView from '../views/ConnorView.vue'
-import { useAuthStore } from '../pinia/authentication'
+// src/nav/navigation.ts
+import { createRouter, createWebHistory } from "vue-router";
+import HomeView from "../views/HomeView.vue";
+import LoginView from "../views/LoginView.vue";
+import SignupView from "../views/SignupView.vue";
+import SavedView from "../views/SavedView.vue";
+import TestView from "../views/TestView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
-      name: 'home',
+      path: "/",
+      name: "home",
       component: HomeView,
       meta: { requiresAuth: true },
     },
     {
-      path: '/login',
-      name: 'login',
+      path: "/login",
+      name: "login",
       component: LoginView,
     },
     {
-      path: '/signup',
-      name: 'signup',
+      path: "/signup",
+      name: "signup",
       component: SignupView,
     },
     {
-      path: '/connor',
-      name: 'connor',
-      component: ConnorView,
+      path: "/saved",
+      name: "saved",
+      component: SavedView,
     },
-
+    {
+      path: "/test",
+      name: "test",
+      component: TestView,
+    },
   ],
-})
+});
+
+export default router;
+
+// import { useAuthStore } from "../pinia/authentication";
 
 // router.beforeEach((to) => {
 //   const authStore = useAuthStore()
@@ -51,5 +59,3 @@ const router = createRouter({
 
 //   return true
 // })
-
-export default router

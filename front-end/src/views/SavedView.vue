@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import AppDrawer from "../components/AppDrawer.vue";
 import FilterFab from "../components/FilterFab.vue";
 import PlaceCard from "../components/PlaceCard.vue";
 import { useSavedPlacesStore } from "../stores/savedPlacesStore";
 
-const drawer = ref(false);
 const slideDirection = ref("slide-left");
 const currentIndex = ref(0);
 
@@ -52,106 +50,51 @@ const previousPlace = () => {
 </script>
 
 <template>
-  <v-app>
-    <AppDrawer v-model="drawer" />
+  <div class="saved-page">
+    <div v-if="currentPlace" class="card-stage">
+      <v-btn
+        class="stage-nav-btn stage-nav-left"
+        icon="mdi-chevron-left"
+        variant="outlined"
+        rounded="xl"
+        @click="previousPlace"
+      />
 
-    <v-main>
-      <v-container class="saved-page py-6">
-        <div class="top-bar mb-6">
-          <div class="top-bar-title-wrap">
-            <div class="app-title">Saved Places</div>
-            <div class="app-subtitle">Your quiet spots, kept in one place</div>
-          </div>
+      <div class="card-column">
+        <transition :name="slideDirection" mode="out-in">
+          <PlaceCard :key="currentPlace.id" :place="currentPlace" />
+        </transition>
+      </div>
 
-          <v-btn
-            class="menu-btn"
-            icon="mdi-menu"
-            variant="text"
-            color="primary"
-            @click="drawer = true"
-          />
+      <v-btn
+        class="stage-nav-btn stage-nav-right"
+        icon="mdi-chevron-right"
+        variant="outlined"
+        rounded="xl"
+        @click="nextPlace"
+      />
+    </div>
+
+    <div v-else class="empty-state">
+      <v-card rounded="xl" elevation="2" class="pa-8 text-center">
+        <div class="text-h6 font-weight-bold mb-2">No saved places yet</div>
+        <div class="text-body-2 text-medium-emphasis mb-4">
+          Save a place from the home page and it will show up here.
         </div>
 
-        <div v-if="currentPlace" class="card-stage">
-          <v-btn
-            class="stage-nav-btn stage-nav-left"
-            icon="mdi-chevron-left"
-            variant="outlined"
-            rounded="xl"
-            @click="previousPlace"
-          />
+        <v-btn color="primary" rounded="xl" :to="{ name: 'home' }">
+          Browse places
+        </v-btn>
+      </v-card>
+    </div>
 
-          <div class="card-column">
-            <transition :name="slideDirection" mode="out-in">
-              <PlaceCard :key="currentPlace.id" :place="currentPlace" />
-            </transition>
-          </div>
-
-          <v-btn
-            class="stage-nav-btn stage-nav-right"
-            icon="mdi-chevron-right"
-            variant="outlined"
-            rounded="xl"
-            @click="nextPlace"
-          />
-        </div>
-
-        <div v-else class="empty-state">
-          <v-card rounded="xl" elevation="2" class="pa-8 text-center">
-            <div class="text-h6 font-weight-bold mb-2">No saved places yet</div>
-            <div class="text-body-2 text-medium-emphasis mb-4">
-              Save a place from the home page and it will show up here.
-            </div>
-
-            <v-btn color="primary" rounded="xl" :to="{ name: 'home' }">
-              Browse places
-            </v-btn>
-          </v-card>
-        </div>
-
-        <FilterFab :store="savedPlacesStore" />
-      </v-container>
-    </v-main>
-  </v-app>
+    <FilterFab :store="savedPlacesStore" />
+  </div>
 </template>
 
 <style scoped>
 .saved-page {
-  min-height: 100vh;
-  background: linear-gradient(to bottom, #f7f9fc, #eef3f9);
-}
-
-.top-bar {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 8px;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 56px;
-}
-
-.top-bar-title-wrap {
-  text-align: center;
-}
-
-.menu-btn {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.app-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1f2d3d;
-}
-
-.app-subtitle {
-  font-size: 0.95rem;
-  color: #6b7280;
+  min-height: 100%;
 }
 
 .card-stage {

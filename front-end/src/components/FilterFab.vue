@@ -1,56 +1,71 @@
 <template>
-  <div>
-    <v-btn
-      icon="mdi-filter-variant"
-      color="primary"
-      size="large"
-      elevation="8"
-      class="filter-fab"
-      @click="dialog = true"
-    />
+  <v-dialog
+    :model-value="modelValue"
+    max-width="400"
+    transition="dialog-bottom-transition"
+    @update:model-value="emit('update:modelValue', $event)"
+  >
+    <v-card rounded="xl" class="filter-card">
+      <div class="filter-topbar">
+        <div class="filter-heading">
+          <div class="filter-title">Filters</div>
+          <div class="filter-subtitle">Refine your quiet place search</div>
+        </div>
 
-    <v-dialog v-model="dialog" max-width="420">
-      <v-card rounded="xl">
-        <v-card-title class="text-h6 font-weight-bold">
-          Filter Places
-        </v-card-title>
-
-        <v-card-text class="pt-2">
-          <v-text-field
-            v-model="store.filters.location"
-            label="Location"
-            variant="outlined"
-            rounded="lg"
-            prepend-inner-icon="mdi-map-marker-outline"
-            class="mb-4"
+        <div class="filter-top-actions">
+          <v-btn
+            icon="mdi-refresh"
+            variant="text"
+            size="small"
+            class="top-icon-btn"
+            @click="store.resetFilters()"
           />
-
-          <v-select
-            v-model="store.filters.rating"
-            :items="ratingOptions"
-            label="Minimum Rating"
-            variant="outlined"
-            rounded="lg"
-            prepend-inner-icon="mdi-star-outline"
-            clearable
+          <v-btn
+            icon="mdi-close"
+            variant="text"
+            size="small"
+            class="top-icon-btn"
+            @click="emit('update:modelValue', false)"
           />
-        </v-card-text>
+          <v-btn
+            icon="mdi-content-save-outline"
+            variant="text"
+            size="small"
+            class="top-icon-btn save-btn"
+            @click="emit('update:modelValue', false)"
+          />
+        </div>
+      </div>
 
-        <v-card-actions class="px-6 pb-5">
-          <v-btn variant="text" @click="store.resetFilters()"> Reset </v-btn>
+      <v-card-text class="filter-body">
+        <v-text-field
+          v-model="store.filters.location"
+          label="Location"
+          placeholder="Building, area, or campus spot"
+          variant="outlined"
+          rounded="lg"
+          prepend-inner-icon="mdi-map-marker-outline"
+          hide-details="auto"
+          class="field-spacing"
+        />
 
-          <v-spacer />
-
-          <v-btn variant="text" @click="dialog = false"> Close </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </div>
+        <v-select
+          v-model="store.filters.rating"
+          :items="ratingOptions"
+          label="Minimum Rating"
+          placeholder="Any"
+          variant="outlined"
+          rounded="lg"
+          prepend-inner-icon="mdi-star-outline"
+          clearable
+          hide-details="auto"
+        />
+      </v-card-text>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-
 type FilterStore = {
   filters: {
     location: string;
@@ -60,25 +75,108 @@ type FilterStore = {
 };
 
 defineProps<{
+  modelValue: boolean;
   store: FilterStore;
 }>();
 
-const dialog = ref(false);
+const emit = defineEmits<{
+  (e: "update:modelValue", value: boolean): void;
+}>();
+
 const ratingOptions = [1, 2, 3, 4, 5];
 </script>
 
 <style scoped>
-.filter-fab {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  z-index: 1200;
+.filter-card {
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+  background: #ffffff;
+}
+
+.filter-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 22px 10px;
+}
+
+.filter-heading {
+  min-width: 0;
+}
+
+.filter-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #172033;
+}
+
+.filter-subtitle {
+  margin-top: 4px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #6b7280;
+}
+
+.filter-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.top-icon-btn {
+  border-radius: 12px;
+  background: transparent;
+  color: rgba(23, 32, 51, 0.52);
+  box-shadow: none;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.top-icon-btn:hover {
+  background: rgba(47, 93, 159, 0.1);
+  color: rgb(47, 93, 159);
+  transform: translateY(-1px);
+}
+
+.top-icon-btn:focus-visible {
+  background: rgba(47, 93, 159, 0.12);
+  color: rgb(47, 93, 159);
+}
+
+.save-btn:hover {
+  background: rgba(47, 93, 159, 0.14);
+  color: rgb(47, 93, 159);
+}
+
+.filter-body {
+  padding: 8px 22px 22px;
+}
+
+.field-spacing {
+  margin-bottom: 14px;
 }
 
 @media (max-width: 600px) {
-  .filter-fab {
-    right: 16px;
-    bottom: 16px;
+  .filter-topbar {
+    padding: 18px 18px 8px;
+  }
+
+  .filter-body {
+    padding: 8px 18px 18px;
+  }
+
+  .filter-title {
+    font-size: 1rem;
+  }
+
+  .filter-subtitle {
+    font-size: 0.86rem;
   }
 }
 </style>

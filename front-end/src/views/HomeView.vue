@@ -6,6 +6,7 @@ import { usePlacesStore } from "../stores/placesStore";
 
 const slideDirection = ref("slide-left");
 const currentIndex = ref(0);
+const filterDialog = ref(false);
 
 const placesStore = usePlacesStore();
 
@@ -47,29 +48,31 @@ const previousPlace = () => {
 </script>
 
 <template>
-  <div>
+  <div class="home-page">
     <div v-if="currentPlace" class="card-stage">
-      <v-btn
-        class="stage-nav-btn stage-nav-left"
-        icon="mdi-chevron-left"
-        variant="outlined"
-        rounded="xl"
-        @click="previousPlace"
-      />
-
       <div class="card-column">
         <transition :name="slideDirection" mode="out-in">
           <PlaceCard :key="currentPlace.id" :place="currentPlace" />
         </transition>
       </div>
 
-      <v-btn
-        class="stage-nav-btn stage-nav-right"
-        icon="mdi-chevron-right"
-        variant="outlined"
-        rounded="xl"
-        @click="nextPlace"
-      />
+      <div class="stage-nav-row">
+        <v-btn
+          class="stage-nav-btn"
+          icon="mdi-chevron-left"
+          variant="outlined"
+          rounded="xl"
+          @click="previousPlace"
+        />
+
+        <v-btn
+          class="stage-nav-btn"
+          icon="mdi-chevron-right"
+          variant="outlined"
+          rounded="xl"
+          @click="nextPlace"
+        />
+      </div>
     </div>
 
     <div v-else class="empty-state">
@@ -85,90 +88,125 @@ const previousPlace = () => {
       </v-card>
     </div>
 
-    <FilterFab :store="placesStore" />
+    <v-btn
+      class="filter-fab"
+      icon="mdi-tune-variant"
+      variant="flat"
+      @click="filterDialog = true"
+    />
+
+    <FilterFab v-model="filterDialog" :store="placesStore" />
   </div>
 </template>
 
 <style scoped>
-.card-stage {
-  max-width: 1120px;
-  margin: 42px auto 0;
+.home-page {
   position: relative;
+}
+
+.card-stage {
   min-height: 760px;
+  padding-bottom: 90px;
 }
 
 .card-column {
   width: min(100%, 560px);
   margin: 0 auto;
+  position: relative;
+}
+
+.stage-nav-row {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 22px;
 }
 
 .stage-nav-btn {
-  position: absolute;
-  top: 280px;
-  transform: translateY(-50%);
-  z-index: 5;
-}
-
-.stage-nav-left {
-  left: 24px;
-}
-
-.stage-nav-right {
-  right: 24px;
+  transform: none;
 }
 
 .empty-state {
-  max-width: 720px;
-  margin: 80px auto 0;
-  padding: 0 16px;
+  margin-top: 80px;
 }
 
+.filter-fab {
+  position: fixed;
+  bottom: 24px;
+  right: max(16px, calc((100vw - 640px) / 2 + 16px));
+  z-index: 1200;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: rgba(47, 93, 159, 0.12);
+  color: rgba(47, 93, 159, 0.72);
+  box-shadow: none;
+  opacity: 0.38;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.filter-fab:hover {
+  background: rgb(47, 93, 159);
+  color: #ffffff;
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(47, 93, 159, 0.25);
+}
+
+.filter-fab:focus-visible {
+  background: rgb(47, 93, 159);
+  color: #ffffff;
+  opacity: 1;
+}
+
+.filter-fab:active {
+  transform: translateY(0);
+}
+
+/* Quiet slide transitions */
 .slide-left-enter-active,
 .slide-left-leave-active,
 .slide-right-enter-active,
 .slide-right-leave-active {
-  transition: all 0.32s ease;
+  transition:
+    opacity 0.34s ease,
+    transform 0.34s ease;
+  will-change: opacity, transform;
 }
 
 .slide-left-enter-from {
   opacity: 0;
-  transform: translateX(60px) scale(0.98);
+  transform: translateX(28px) scale(0.985);
 }
 
 .slide-left-leave-to {
   opacity: 0;
-  transform: translateX(-60px) scale(0.98);
+  transform: translateX(-28px) scale(0.985);
 }
 
 .slide-right-enter-from {
   opacity: 0;
-  transform: translateX(-60px) scale(0.98);
+  transform: translateX(-28px) scale(0.985);
 }
 
 .slide-right-leave-to {
   opacity: 0;
-  transform: translateX(60px) scale(0.98);
+  transform: translateX(28px) scale(0.985);
 }
 
-@media (max-width: 980px) {
-  .card-stage {
-    max-width: 640px;
-    min-height: 760px;
-    padding: 0 16px 90px;
-  }
-
-  .stage-nav-btn {
-    top: auto;
-    bottom: 0;
-    transform: none;
-  }
-
-  .stage-nav-left {
-    left: calc(50% - 68px);
-  }
-
-  .stage-nav-right {
-    right: calc(50% - 68px);
+@media (max-width: 640px) {
+  .filter-fab {
+    right: 16px;
+    bottom: 16px;
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    opacity: 0.88;
   }
 }
 </style>

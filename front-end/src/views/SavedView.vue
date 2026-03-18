@@ -1,78 +1,63 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import FilterFab from "../components/FilterFab.vue";
 import PlaceCard from "../components/PlaceCard.vue";
 import { useSavedPlacesStore } from "../stores/savedPlacesStore";
 
-const slideDirection = ref("slide-left");
-const currentIndex = ref(0);
-
 const savedPlacesStore = useSavedPlacesStore();
+const filterDialog = ref(false);
 
 const filteredSavedPlaces = computed(
   () => savedPlacesStore.filteredSavedPlaces,
 );
 
-const currentPlace = computed(() => {
-  if (filteredSavedPlaces.value.length === 0) return null;
-  return filteredSavedPlaces.value[currentIndex.value] ?? null;
+const selectedPlaceId = ref<number | null>(null);
+
+const selectedPlace = computed(() => {
+  if (selectedPlaceId.value === null) return null;
+
+  return (
+    filteredSavedPlaces.value.find(
+      (place) => place.id === selectedPlaceId.value,
+    ) ?? null
+  );
 });
 
-watch(
-  filteredSavedPlaces,
-  (places) => {
-    if (places.length === 0) {
-      currentIndex.value = 0;
-      return;
-    }
+function openPlace(placeId: number) {
+  selectedPlaceId.value = placeId;
+}
 
-    if (currentIndex.value > places.length - 1) {
-      currentIndex.value = 0;
-    }
-  },
-  { immediate: true },
-);
-
-const nextPlace = () => {
-  if (filteredSavedPlaces.value.length === 0) return;
-  slideDirection.value = "slide-left";
-  currentIndex.value =
-    (currentIndex.value + 1) % filteredSavedPlaces.value.length;
-};
-
-const previousPlace = () => {
-  if (filteredSavedPlaces.value.length === 0) return;
-  slideDirection.value = "slide-right";
-  currentIndex.value =
-    (currentIndex.value - 1 + filteredSavedPlaces.value.length) %
-    filteredSavedPlaces.value.length;
-};
+function closePlace() {
+  selectedPlaceId.value = null;
+}
 </script>
 
 <template>
   <div class="saved-page">
-    <div v-if="currentPlace" class="card-stage">
-      <v-btn
-        class="stage-nav-btn stage-nav-left"
-        icon="mdi-chevron-left"
-        variant="outlined"
-        rounded="xl"
-        @click="previousPlace"
-      />
+    <div v-if="filteredSavedPlaces.length > 0" class="saved-grid-wrap">
+      <div class="saved-grid">
+        <v-card
+          v-for="place in filteredSavedPlaces"
+          :key="place.id"
+          class="saved-tile"
+          rounded="xl"
+          elevation="2"
+          @click="openPlace(place.id)"
+        >
+          <v-img
+            :src="place.images[0]"
+            :alt="place.name"
+            height="220"
+            cover
+            class="saved-tile-image"
+          />
 
-      <div class="card-column">
-        <transition :name="slideDirection" mode="out-in">
-          <PlaceCard :key="currentPlace.id" :place="currentPlace" />
-        </transition>
+          <div class="saved-tile-overlay">
+            <div class="saved-tile-title">{{ place.name }}</div>
+            <div class="saved-tile-location">{{ place.location }}</div>
+          </div>
+        </v-card>
       </div>
-
-      <v-btn
-        class="stage-nav-btn stage-nav-right"
-        icon="mdi-chevron-right"
-        variant="outlined"
-        rounded="xl"
-        @click="nextPlace"
-      />
     </div>
 
     <div v-else class="empty-state">
@@ -88,40 +73,94 @@ const previousPlace = () => {
       </v-card>
     </div>
 
-    <FilterFab :store="savedPlacesStore" />
+    <transition name="overlay-fade">
+      <div v-if="selectedPlace" class="place-overlay" @click="closePlace">
+        <div class="place-overlay-content" @click.stop>
+          <div class="place-overlay-actions">
+            <v-btn
+              icon="mdi-close"
+              variant="text"
+              color="white"
+              @click="closePlace"
+            />
+          </div>
+
+          <PlaceCard :place="selectedPlace" />
+        </div>
+      </div>
+    </transition>
+
+    <v-btn
+      class="filter-fab"
+      icon="mdi-tune-variant"
+      variant="flat"
+      @click="filterDialog = true"
+    />
+
+    <FilterFab v-model="filterDialog" :store="savedPlacesStore" />
   </div>
 </template>
 
 <style scoped>
 .saved-page {
   min-height: 100%;
+  padding: 8px 16px 32px;
 }
 
-.card-stage {
-  max-width: 1120px;
-  margin: 42px auto 0;
-  position: relative;
-  min-height: 760px;
-}
-
-.card-column {
-  width: min(100%, 560px);
+.saved-grid-wrap {
+  max-width: 1200px;
   margin: 0 auto;
 }
 
-.stage-nav-btn {
+.saved-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.saved-tile {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  background: #ffffff;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.saved-tile:hover {
+  transform: translateY(-4px);
+}
+
+.saved-tile-image {
+  background: #eef3f9;
+}
+
+.saved-tile-overlay {
   position: absolute;
-  top: 280px;
-  transform: translateY(-50%);
-  z-index: 5;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 14px 14px 12px;
+  background: linear-gradient(
+    to top,
+    rgba(15, 23, 42, 0.78),
+    rgba(15, 23, 42, 0.28),
+    rgba(15, 23, 42, 0)
+  );
+  color: white;
 }
 
-.stage-nav-left {
-  left: 24px;
+.saved-tile-title {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 3px;
 }
 
-.stage-nav-right {
-  right: 24px;
+.saved-tile-location {
+  font-size: 0.88rem;
+  opacity: 0.92;
 }
 
 .empty-state {
@@ -130,52 +169,101 @@ const previousPlace = () => {
   padding: 0 16px;
 }
 
-.slide-left-enter-active,
-.slide-left-leave-active,
-.slide-right-enter-active,
-.slide-right-leave-active {
-  transition: all 0.32s ease;
+.place-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(15, 23, 42, 0.42);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 16px;
+  overflow-y: auto;
 }
 
-.slide-left-enter-from {
+.place-overlay-content {
+  width: min(100%, 560px);
+}
+
+.place-overlay-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.filter-fab {
+  position: fixed;
+  bottom: 24px;
+  right: max(16px, calc((100vw - 640px) / 2 + 16px));
+  z-index: 1200;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: rgba(47, 93, 159, 0.12);
+  color: rgba(47, 93, 159, 0.72);
+  box-shadow: none;
+  opacity: 0.38;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.filter-fab:hover {
+  background: rgb(47, 93, 159);
+  color: #ffffff;
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(47, 93, 159, 0.25);
+}
+
+.filter-fab:focus-visible {
+  background: rgb(47, 93, 159);
+  color: #ffffff;
+  opacity: 1;
+}
+
+.filter-fab:active {
+  transform: translateY(0);
+}
+
+.overlay-fade-enter-active,
+.overlay-fade-leave-active {
+  transition: opacity 0.22s ease;
+}
+
+.overlay-fade-enter-from,
+.overlay-fade-leave-to {
   opacity: 0;
-  transform: translateX(60px) scale(0.98);
 }
 
-.slide-left-leave-to {
-  opacity: 0;
-  transform: translateX(-60px) scale(0.98);
-}
-
-.slide-right-enter-from {
-  opacity: 0;
-  transform: translateX(-60px) scale(0.98);
-}
-
-.slide-right-leave-to {
-  opacity: 0;
-  transform: translateX(60px) scale(0.98);
-}
-
-@media (max-width: 980px) {
-  .card-stage {
-    max-width: 640px;
-    min-height: 760px;
-    padding: 0 16px 90px;
+@media (max-width: 640px) {
+  .saved-page {
+    padding: 8px 12px 28px;
   }
 
-  .stage-nav-btn {
-    top: auto;
-    bottom: 0;
-    transform: none;
+  .saved-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
 
-  .stage-nav-left {
-    left: calc(50% - 68px);
+  .place-overlay {
+    padding: 20px 12px;
   }
 
-  .stage-nav-right {
-    right: calc(50% - 68px);
+  .place-overlay-content {
+    width: 100%;
+  }
+
+  .filter-fab {
+    right: 16px;
+    bottom: 16px;
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    opacity: 0.88;
   }
 }
 </style>

@@ -4,22 +4,30 @@
     temporary
     location="left"
     width="300"
+    class="app-drawer"
     @update:model-value="emit('update:modelValue', $event)"
   >
     <div class="drawer-content d-flex flex-column h-100">
       <div>
-        <div class="pa-4">
-          <div class="drawer-title">Menu</div>
-          <div class="drawer-subtitle">Browse the app</div>
+        <div class="drawer-header">
+          <div class="drawer-badge">
+            <v-icon size="18">mdi-menu</v-icon>
+          </div>
+
+          <div>
+            <div class="drawer-title">Menu</div>
+            <div class="drawer-subtitle">Browse the app</div>
+          </div>
         </div>
 
         <v-divider />
 
-        <v-list nav class="pt-2">
+        <v-list nav class="drawer-list">
           <v-list-item
             prepend-icon="mdi-home-outline"
             title="Home"
             rounded="xl"
+            class="drawer-item"
             @click="goTo('home')"
           />
 
@@ -28,6 +36,7 @@
             prepend-icon="mdi-heart-outline"
             title="Saved Places"
             rounded="xl"
+            class="drawer-item"
             @click="goTo('saved')"
           />
 
@@ -36,12 +45,13 @@
             prepend-icon="mdi-plus-circle-outline"
             title="Add a Place"
             rounded="xl"
+            class="drawer-item"
             @click="goTo('add-place')"
           />
         </v-list>
       </div>
 
-      <div class="mt-auto pa-4">
+      <div class="drawer-footer">
         <v-divider class="mb-4" />
 
         <v-btn
@@ -51,6 +61,7 @@
           color="primary"
           rounded="xl"
           prepend-icon="mdi-logout"
+          class="drawer-action-btn"
           @click="handleLogout"
         >
           Log out
@@ -62,6 +73,7 @@
           color="primary"
           rounded="xl"
           prepend-icon="mdi-login"
+          class="drawer-action-btn"
           @click="goTo('login')"
         >
           Sign In
@@ -76,7 +88,7 @@ import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/authStore";
 
-const props = defineProps<{
+defineProps<{
   modelValue: boolean;
 }>();
 
@@ -110,18 +122,62 @@ async function handleLogout() {
 </script>
 
 <style scoped>
+.app-drawer :deep(.v-navigation-drawer__content) {
+  background: #ffffff;
+}
+
 .drawer-content {
   background: #ffffff;
 }
 
+.drawer-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 22px 20px 18px;
+}
+
+.drawer-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(47, 93, 159, 0.08);
+  color: rgb(47, 93, 159);
+  flex-shrink: 0;
+}
+
 .drawer-title {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
+  line-height: 1.2;
+  color: #172033;
 }
 
 .drawer-subtitle {
-  font-size: 0.9rem;
-  color: rgba(0, 0, 0, 0.55);
   margin-top: 4px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #6b7280;
+}
+
+.drawer-list {
+  padding: 10px 12px 0;
+}
+
+.drawer-item {
+  margin-bottom: 6px;
+}
+
+.drawer-footer {
+  margin-top: auto;
+  padding: 16px 20px 20px;
+}
+
+.drawer-action-btn {
+  text-transform: none;
+  font-weight: 600;
 }
 </style>

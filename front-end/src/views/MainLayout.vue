@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import AppDrawer from "../components/AppDrawer.vue";
 import { useRoute } from "vue-router";
+import AppDrawer from "../components/AppDrawer.vue";
 
 const drawer = ref(false);
 const route = useRoute();
@@ -11,9 +11,9 @@ const route = useRoute();
   <div class="app-shell">
     <AppDrawer v-model="drawer" />
 
-    <v-main>
-      <v-container class="layout-page py-6">
-        <div class="top-bar mb-6">
+    <v-main class="main-area">
+      <div class="layout-shell">
+        <header class="top-bar">
           <v-btn
             class="menu-btn"
             icon="mdi-menu"
@@ -30,36 +30,56 @@ const route = useRoute();
           </div>
 
           <div class="top-bar-spacer" />
-        </div>
+        </header>
 
-        <router-view />
-      </v-container>
+        <section class="page-content">
+          <router-view />
+        </section>
+      </div>
     </v-main>
   </div>
 </template>
 
 <style scoped>
-.layout-page {
+.app-shell {
   min-height: 100vh;
   background: linear-gradient(to bottom, #f7f9fc, #eef3f9);
 }
 
-.top-bar {
-  max-width: 1100px;
+.main-area {
+  min-height: 100vh;
+}
+
+.layout-shell {
+  width: min(100%, 640px);
   margin: 0 auto;
-  padding: 0 8px;
+  padding: 20px 16px 32px;
+}
+
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   min-height: 56px;
+  margin-bottom: 24px;
+  padding: 8px 0;
+  background: rgba(247, 249, 252, 0.92);
+  backdrop-filter: blur(10px);
 }
 
 .menu-btn {
   flex: 0 0 auto;
+  border-radius: 14px;
 }
 
 .top-bar-title-wrap {
   flex: 1;
   text-align: center;
+  min-width: 0;
+  padding: 0 12px;
 }
 
 .top-bar-spacer {
@@ -70,11 +90,36 @@ const route = useRoute();
 .app-title {
   font-size: 1.25rem;
   font-weight: 700;
+  line-height: 1.2;
   color: #1f2d3d;
 }
 
 .app-subtitle {
-  font-size: 0.95rem;
+  margin-top: 4px;
+  font-size: 0.92rem;
+  line-height: 1.35;
   color: #6b7280;
+}
+
+.page-content {
+  min-height: calc(100vh - 140px);
+}
+
+@media (max-width: 640px) {
+  .layout-shell {
+    padding: 16px 16px 24px;
+  }
+
+  .top-bar {
+    margin-bottom: 20px;
+  }
+
+  .app-title {
+    font-size: 1.12rem;
+  }
+
+  .app-subtitle {
+    font-size: 0.88rem;
+  }
 }
 </style>

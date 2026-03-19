@@ -48,6 +48,15 @@
             class="drawer-item"
             @click="goTo('add-place')"
           />
+
+          <v-list-item
+            v-if="isLoggedIn"
+            prepend-icon="mdi-account-box-edit-outline"
+            title="Account"
+            rounded="xl"
+            class="drawer-item"
+            @click="goTo('account-page')"
+          />
         </v-list>
       </div>
 
@@ -112,6 +121,7 @@ function goTo(name: string) {
 
 async function handleLogout() {
   try {
+
     await auth.logout();
     closeDrawer();
     router.push({ name: "home" });

@@ -7,6 +7,10 @@ import {
   signOut,
   onAuthStateChanged,
   type User,
+  updateProfile,
+  verifyBeforeUpdateEmail,
+  reauthenticateWithCredential,
+  EmailAuthProvider
 } from 'firebase/auth'
 import { auth } from '../firebase/firebase'
 
@@ -33,27 +37,71 @@ export const useAuthStore = defineStore('auth', () => {
       await signInWithEmailAndPassword(auth, email, password)
     } catch (err: any) {
       error.value = mapFirebaseError(err?.code)
+      if(!password){
+        error.value += " Please provide a password."
+      }
+      if(!email){
+        error.value += " Please provide an email."
+      }
       throw err
     } finally {
       loading.value = false
     }
   }
 
-  async function signup(email: string, password: string) {
+  async function signup(email: string, password: string, username: string) {
     loading.value = true
     error.value = ''
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password)
+      const newUser = await createUserWithEmailAndPassword(auth, email, password)
+      await updateProfile(newUser.user, {
+        displayName: username
+      })
     } catch (err: any) {
       error.value = mapFirebaseError(err?.code)
       throw err
     } finally {
       loading.value = false
     }
+
+  }
+
+  async function editAccount(email: string, username: string, college: string, password: string) {
+    loading.value = true
+    error.value = ''
+    
+
+    try {
+      if (auth.currentUser) {
+        if (email && auth.currentUser.email && auth.currentUser.email != email){
+          const credential = EmailAuthProvider.credential(
+            auth.currentUser.email!,
+            password
+          )
+          await reauthenticateWithCredential(auth.currentUser, credential)
+          await verifyBeforeUpdateEmail(auth.currentUser, email)
+        }
+        if (username){
+          await updateProfile(auth.currentUser, {
+            displayName: username
+          })
+        }
+        
+
+      }
+      
+    } catch (err: any) {
+      error.value = mapFirebaseError(err?.code)
+      throw err
+    } finally {
+      loading.value = false
+    }
+
   }
 
   async function logout() {
+
     await signOut(auth)
   }
 
@@ -84,5 +132,6 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     signup,
     logout,
+    editAccount,
   }
 })

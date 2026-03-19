@@ -22,6 +22,15 @@
         />
 
         <v-text-field
+          v-model="username"
+          label="Username (optional)"
+          type="text"
+          variant="outlined"
+          rounded="lg"
+          class="mb-3"
+        />
+
+        <v-text-field
           v-model="password"
           label="Password"
           type="password"
@@ -69,11 +78,11 @@
 import { ref } from "vue";
 import { useRouter, RouterLink } from "vue-router";
 import { useAuthStore } from "../stores/authStore";
-
 const router = useRouter();
 const auth = useAuthStore();
 
 const email = ref("");
+const username = ref("");
 const password = ref("");
 const confirmPassword = ref("");
 const localError = ref("");
@@ -87,7 +96,7 @@ const handleSignup = async () => {
   }
 
   try {
-    await auth.signup(email.value, password.value);
+    await auth.signup(email.value, password.value, username.value);
     router.push("/");
   } catch {
     // store already handles firebase errors

@@ -1,7 +1,7 @@
 <template>
   <v-container fluid class="auth-page d-flex align-center justify-center">
     <v-card class="auth-card pa-6" rounded="xl" elevation="6">
-      <div class="text-h5 font-weight-bold mb-2">Greetings {{ user?.displayName??"" }}</div>
+      <div class="text-h5 font-weight-bold mb-2">Greetings {{ header }}</div>
       <div class="text-body-2 text-medium-emphasis mb-6">
         Edit your account details.
       </div>
@@ -39,6 +39,7 @@
         />
 
         <v-text-field
+          v-if="emailChanged"
           v-model="ePassword"
           label="Password"
           type="password"
@@ -49,6 +50,10 @@
 
         <v-alert v-if="localError" type="warning" variant="tonal" class="mb-4">
           {{ localError }}
+        </v-alert>
+
+        <v-alert v-if="successMessage" type="success" variant="tonal" class="mb-4">
+          {{ successMessage }}
         </v-alert>
 
         <v-btn
@@ -64,9 +69,8 @@
       </v-form>
     </v-card>
     <v-card class="auth-card pa-6" rounded="xl" elevation="6">
-      <div class="text-h5 font-weight-bold mb-2">Greetings {{}}</div>
       <div class="text-body-2 text-medium-emphasis mb-6">
-        Edit your account details.
+        Change your Password
       </div>
       <v-alert v-if="auth.error" type="error" variant="tonal" class="mb-4">
         {{ auth.error }}
@@ -74,8 +78,8 @@
 
       <v-form @submit.prevent="changePassword">
         <v-text-field
-          v-model="password"
-          label="Password"
+          v-model="newPassword"
+          label="New Password"
           type="password"
           variant="outlined"
           rounded="lg"
@@ -83,16 +87,29 @@
         />
 
         <v-text-field
-          v-model="confirmPassword"
-          label="Confirm Password"
+          v-model="confirmNewPassword"
+          label="Confirm New Password"
           type="password"
           variant="outlined"
           rounded="lg"
           class="mb-4"
         />
 
-        <v-alert v-if="localError" type="warning" variant="tonal" class="mb-4">
+        <v-text-field
+          v-model="oldPassword"
+          label="Old Password"
+          type="password"
+          variant="outlined"
+          rounded="lg"
+          class="mb-4"
+        />
+
+        <v-alert v-if="localErrorPass" type="warning" variant="tonal" class="mb-4">
           {{ localErrorPass }}
+        </v-alert>
+
+        <v-alert v-if="successMessagePass" type="success" variant="tonal" class="mb-4">
+          {{ successMessagePass }}
         </v-alert>
 
         <v-btn
@@ -111,66 +128,92 @@
 </template>
 
 <script setup lang="ts">
-      //require old password to change password
+      //TO DO:
       //be able to set college.
-      //make it so email is reactive to current user email.
-      //make it so you don't get logged out on page refresh.
-import { ref, computed} from "vue";
-import { useRouter } from "vue-router";
+
+import { ref, computed, onMounted} from "vue";
 import { useAuthStore } from "../stores/authStore";
-const router = useRouter();
+
 const auth = useAuthStore();
 const user = computed(() => auth.user)
 const email = ref(user.value?.email??"");
 const username = ref(user.value?.displayName??"");
-const college = ref("");
-const password = ref("");
+const header = ref(user.value?.displayName??"");
+const college = ref("")
+
+onMounted(async () => {
+  college.value = await auth.getCollege() ?? ""
+})
+const newPassword = ref("");
 const ePassword = ref("");
-const confirmPassword = ref("");
+const confirmNewPassword = ref("");
+const oldPassword = ref("")
 const localError = ref("");
 const localErrorPass = ref("");
+const successMessage = ref("");
+const successMessagePass = ref("");
+
+const emailChanged = computed(() => {
+  return email.value !== (user.value?.email);
+});
+
 
 const editAccount = async () => {
     localError.value = "";
+    successMessage.value = "";
+
+    if(email.value == user.value?.email && 
+    username.value == user.value?.displayName &&
+    college.value == await auth.getCollege()){
+      localError.value = "No value was changed.";
+      return;
+    }
+
     if (email.value !== user.value?.email && !ePassword.value) {
         localError.value = "Please enter your password to change email.";
         return;
     }
 
-
-    if (email.value != user.value?.email){
-         try {
-            await auth.editAccount(email.value, username.value, "", ePassword.value);
-            router.push("/");
-        } catch {
-            //store already handles firebase errors
-        }
-    } else{
-        try {
-            await auth.editAccount(email.value, username.value, "", "");
-            router.push("/");
-        } catch {
-            //store already handles firebase errors
-        }
+    try {
+      await auth.editAccount(email.value, username.value, college.value, ePassword.value);
+      if (email.value !== user.value?.email){
+        successMessage.value = "A verification E-mail has been sent to your new account E-mail. Click on the link provided to finalize the change."
+        email.value = user.value?.email??"";
+        ePassword.value = "";
+      } else{
+        successMessage.value = "Your account data has been changed"
+      }
+      header.value = user.value?.displayName??"";
+    } catch {
+      //store already handles firebase errors
     }
-    
-
-  
 };
 
 const changePassword = async () => {
   localErrorPass.value = "";
+  if(!newPassword.value || !confirmNewPassword.value || !oldPassword.value){
+    localErrorPass.value = "all feilds are required to change your password.";
+    return;
+  }
 
-  if (password.value !== confirmPassword.value) {
+  if (newPassword.value !== confirmNewPassword.value) {
     localErrorPass.value = "Passwords do not match.";
     return;
   }
 
+  if (newPassword.value == oldPassword.value) {
+    localErrorPass.value = "new and old passwords are the same";
+    return;
+  }
+
   try {
-    //await auth.signup(email.value, password.value, username.value);
-    router.push("/");
+    await auth.changePassword(newPassword.value, oldPassword.value);
+    newPassword.value = "";
+    oldPassword.value = "";
+    confirmNewPassword.value = "";
+    successMessagePass.value = "Password changed"
   } catch {
-    // store already handles firebase errors
+     //store already handles firebase errors
   }
 };
 </script>

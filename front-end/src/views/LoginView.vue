@@ -45,7 +45,7 @@
 
       <div class="text-body-2 mt-4">
         Don’t have an account?
-        <RouterLink to="/signup">Create one</RouterLink>
+        <RouterLink to="/signup" @click="auth.error = ''">Create one</RouterLink>
       </div>
     </v-card>
   </v-container>

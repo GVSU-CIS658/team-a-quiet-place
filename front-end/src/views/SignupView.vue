@@ -68,7 +68,7 @@
 
       <div class="text-body-2 mt-4">
         Already have an account?
-        <RouterLink to="/login">Log in</RouterLink>
+        <RouterLink to="/login" @click="auth.error = ''">Log in</RouterLink>
       </div>
     </v-card>
   </v-container>

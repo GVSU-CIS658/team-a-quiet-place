@@ -3,6 +3,8 @@ import { computed, ref, watch } from "vue";
 import FilterFab from "../components/FilterFab.vue";
 import PlaceCard from "../components/PlaceCard.vue";
 import { usePlacesStore } from "../stores/placesStore";
+import { useAuthStore } from "../stores/authStore";
+const auth = useAuthStore();
 
 const slideDirection = ref("slide-left");
 const currentIndex = ref(0);
@@ -97,6 +99,22 @@ const previousPlace = () => {
 
     <FilterFab v-model="filterDialog" :store="placesStore" />
   </div>
+  <v-dialog v-model="auth.showLogoutDialog" max-width="400">
+    <v-card rounded="xl">
+      <v-card-title class="text-h6">
+        Success
+      </v-card-title>
+      <v-card-text>
+        You've been logged out
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn color="primary" @click="auth.showLogoutDialog = false">
+          OK
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <style scoped>

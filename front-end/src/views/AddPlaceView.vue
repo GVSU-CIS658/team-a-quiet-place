@@ -1,140 +1,3 @@
-<script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from "vue";
-import { useRouter } from "vue-router";
-import { useAddPlaceStore } from "../stores/addPlaceStore";
-
-const router = useRouter();
-const addPlaceStore = useAddPlaceStore();
-
-const formRef = ref();
-
-const name = ref("New Quiet Place");
-const location = ref("Campus location");
-const description = ref(
-  "Describe what makes this place calm, comfortable, or good for studying.",
-);
-const firstReview = ref("");
-
-const tags = ref<string[]>(["quiet"]);
-const tagInput = ref("");
-
-const imagePreviewUrl = ref(
-  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
-);
-
-const editingField = ref<"name" | "location" | "description" | "review" | null>(
-  null,
-);
-
-const fileInputRef = ref<HTMLInputElement | null>(null);
-
-const defaultName = "New Quiet Place";
-const defaultLocation = "Campus location";
-const defaultDescription =
-  "Describe what makes this place calm, comfortable, or good for studying.";
-
-const rules = {
-  required: (value: string) => !!value?.trim() || "This field is required.",
-  minName: (value: string) =>
-    value.trim().length >= 3 || "Name must be at least 3 characters.",
-  minLocation: (value: string) =>
-    value.trim().length >= 3 || "Location must be at least 3 characters.",
-  minDescription: (value: string) =>
-    value.trim().length >= 15 || "Description must be at least 15 characters.",
-  maxDescription: (value: string) =>
-    value.trim().length <= 500 || "Description cannot exceed 500 characters.",
-  maxReview: (value: string) =>
-    value.trim().length <= 300 || "Review cannot exceed 300 characters.",
-};
-
-const isNameValid = computed(() => name.value.trim().length >= 3);
-const isLocationValid = computed(() => location.value.trim().length >= 3);
-const isDescriptionValid = computed(() => {
-  const len = description.value.trim().length;
-  return len >= 15 && len <= 500;
-});
-const isReviewValid = computed(() => firstReview.value.trim().length <= 300);
-const hasAtLeastOneTag = computed(() => tags.value.length > 0);
-
-const canSubmit = computed(() => {
-  return (
-    isNameValid.value &&
-    isLocationValid.value &&
-    isDescriptionValid.value &&
-    isReviewValid.value &&
-    hasAtLeastOneTag.value &&
-    !addPlaceStore.isSubmitting
-  );
-});
-
-function startEditing(field: "name" | "location" | "description" | "review") {
-  editingField.value = field;
-}
-
-function stopEditing() {
-  editingField.value = null;
-
-  if (!name.value.trim()) name.value = defaultName;
-  if (!location.value.trim()) location.value = defaultLocation;
-  if (!description.value.trim()) description.value = defaultDescription;
-}
-
-function triggerImageUpload() {
-  fileInputRef.value?.click();
-}
-
-function handleImageSelected(event: Event) {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
-  if (!file) return;
-
-  if (imagePreviewUrl.value.startsWith("blob:")) {
-    URL.revokeObjectURL(imagePreviewUrl.value);
-  }
-
-  imagePreviewUrl.value = URL.createObjectURL(file);
-}
-
-function addTag() {
-  const value = tagInput.value.trim().toLowerCase();
-  if (!value) return;
-
-  if (!tags.value.includes(value)) {
-    tags.value.push(value);
-  }
-
-  tagInput.value = "";
-}
-
-function removeTag(tag: string) {
-  tags.value = tags.value.filter((t) => t !== tag);
-}
-
-async function handleSubmit() {
-  const result = await formRef.value?.validate();
-
-  if (!result?.valid) return;
-  if (!hasAtLeastOneTag.value) return;
-
-  await addPlaceStore.createPlace({
-    name: name.value.trim(),
-    location: location.value.trim(),
-    description: description.value.trim(),
-    images: [imagePreviewUrl.value],
-    tags: tags.value,
-    firstReview: firstReview.value.trim(),
-  });
-
-  router.push({ name: "home" });
-}
-
-onBeforeUnmount(() => {
-  if (imagePreviewUrl.value.startsWith("blob:")) {
-    URL.revokeObjectURL(imagePreviewUrl.value);
-  }
-});
-</script>
-
 <template>
   <div class="add-place-page">
     <div class="editor-shell">
@@ -382,6 +245,144 @@ onBeforeUnmount(() => {
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { computed, onBeforeUnmount, ref } from "vue";
+import { useRouter } from "vue-router";
+import { useAddPlaceStore } from "../stores/addPlaceStore";
+
+const router = useRouter();
+const addPlaceStore = useAddPlaceStore();
+
+const formRef = ref();
+
+const name = ref("New Quiet Place");
+const location = ref("Campus location");
+const description = ref(
+  "Describe what makes this place calm, comfortable, or good for studying.",
+);
+const firstReview = ref("");
+
+const tags = ref<string[]>(["quiet"]);
+const tagInput = ref("");
+
+const imagePreviewUrl = ref(
+  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
+);
+
+const editingField = ref<"name" | "location" | "description" | "review" | null>(
+  null,
+);
+
+const fileInputRef = ref<HTMLInputElement | null>(null);
+
+const defaultName = "New Quiet Place";
+const defaultLocation = "Campus location";
+const defaultDescription =
+  "Describe what makes this place calm, comfortable, or good for studying.";
+
+const rules = {
+  required: (value: string) => !!value?.trim() || "This field is required.",
+  minName: (value: string) =>
+    value.trim().length >= 3 || "Name must be at least 3 characters.",
+  minLocation: (value: string) =>
+    value.trim().length >= 3 || "Location must be at least 3 characters.",
+  minDescription: (value: string) =>
+    value.trim().length >= 15 || "Description must be at least 15 characters.",
+  maxDescription: (value: string) =>
+    value.trim().length <= 500 || "Description cannot exceed 500 characters.",
+  maxReview: (value: string) =>
+    value.trim().length <= 300 || "Review cannot exceed 300 characters.",
+};
+
+const isNameValid = computed(() => name.value.trim().length >= 3);
+const isLocationValid = computed(() => location.value.trim().length >= 3);
+const isDescriptionValid = computed(() => {
+  const len = description.value.trim().length;
+  return len >= 15 && len <= 500;
+});
+const isReviewValid = computed(() => firstReview.value.trim().length <= 300);
+const hasAtLeastOneTag = computed(() => tags.value.length > 0);
+
+const canSubmit = computed(() => {
+  return (
+    isNameValid.value &&
+    isLocationValid.value &&
+    isDescriptionValid.value &&
+    isReviewValid.value &&
+    hasAtLeastOneTag.value &&
+    !addPlaceStore.isSubmitting
+  );
+});
+
+function startEditing(field: "name" | "location" | "description" | "review") {
+  editingField.value = field;
+}
+
+function stopEditing() {
+  editingField.value = null;
+
+  if (!name.value.trim()) name.value = defaultName;
+  if (!location.value.trim()) location.value = defaultLocation;
+  if (!description.value.trim()) description.value = defaultDescription;
+}
+
+function triggerImageUpload() {
+  fileInputRef.value?.click();
+}
+
+function handleImageSelected(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+
+  if (imagePreviewUrl.value.startsWith("blob:")) {
+    URL.revokeObjectURL(imagePreviewUrl.value);
+  }
+
+  imagePreviewUrl.value = URL.createObjectURL(file);
+}
+
+function addTag() {
+  const value = tagInput.value.trim().toLowerCase();
+  if (!value) return;
+
+  if (!tags.value.includes(value)) {
+    tags.value.push(value);
+  }
+
+  tagInput.value = "";
+}
+
+function removeTag(tag: string) {
+  tags.value = tags.value.filter((t) => t !== tag);
+}
+
+async function handleSubmit() {
+  const result = await formRef.value?.validate();
+
+  if (!result?.valid) return;
+  if (!hasAtLeastOneTag.value) return;
+
+  await addPlaceStore.createPlace({
+    name: name.value.trim(),
+    location: location.value.trim(),
+    description: description.value.trim(),
+    images: [imagePreviewUrl.value],
+    tags: tags.value,
+    firstReview: firstReview.value.trim(),
+  });
+
+  router.push({ name: "home" });
+}
+
+onBeforeUnmount(() => {
+  if (imagePreviewUrl.value.startsWith("blob:")) {
+    URL.revokeObjectURL(imagePreviewUrl.value);
+  }
+});
+</script>
+
 
 <style scoped>
 .add-place-page {

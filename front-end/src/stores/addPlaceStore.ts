@@ -1,5 +1,7 @@
 import { defineStore } from "pinia";
-import type { Place } from "../types/data";
+import type { Place, Review} from "../types/data";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from '../firebase/firebase'
 
 type CreatePlaceInput = {
   name: string;
@@ -7,6 +9,7 @@ type CreatePlaceInput = {
   description: string;
   images: string[];
   tags: string[];
+  firstReview: string;
 };
 
 export const useAddPlaceStore = defineStore("addPlace", {
@@ -31,8 +34,24 @@ export const useAddPlaceStore = defineStore("addPlace", {
           images: input.images,
           tags: input.tags,
         };
+        if (input.firstReview != ''){
+          if(auth.currentUser?.displayName){
+            const review: Review = {
+              id: 1,
+              placeId: payload.id,
+              user: auth.currentUser.displayName,
+              rating: 5,
+              text: input.firstReview.trim(),
+              createdAt: Date.now().toString()
+            };
 
-        await new Promise((resolve) => setTimeout(resolve, 500));
+
+            await setDoc(doc(db, "reviews", review.id.toString()), review)
+
+          }
+        }
+        
+        await setDoc(doc(db, "places", payload.id.toString()), payload)
 
         return payload;
       } catch (error) {

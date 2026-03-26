@@ -1,6 +1,6 @@
 export type Review = {
-  id: number;
-  placeId: number;
+  id: string;
+  placeId: string;
   user: string;
   rating: number;
   text: string;
@@ -8,7 +8,7 @@ export type Review = {
 };
 
 export type Place = {
-  id: number;
+  id: string;
   name: string;
   location: string;
   description: string;

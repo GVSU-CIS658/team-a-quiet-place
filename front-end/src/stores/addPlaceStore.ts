@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import type { Place, Review} from "../types/data";
-import { doc, setDoc } from "firebase/firestore";
+import { updateDoc, addDoc, collection } from "firebase/firestore";
 import { auth, db } from '../firebase/firebase'
 
 type CreatePlaceInput = {
@@ -10,6 +10,7 @@ type CreatePlaceInput = {
   images: string[];
   tags: string[];
   firstReview: string;
+  firstReviewScore: number;
 };
 
 export const useAddPlaceStore = defineStore("addPlace", {
@@ -25,7 +26,7 @@ export const useAddPlaceStore = defineStore("addPlace", {
 
       try {
         const payload: Place = {
-          id: Date.now(),
+          id: Date.now().toString(),
           name: input.name.trim(),
           location: input.location.trim(),
           description: input.description.trim(),
@@ -34,24 +35,29 @@ export const useAddPlaceStore = defineStore("addPlace", {
           images: input.images,
           tags: input.tags,
         };
+        const docPla = await addDoc(collection(db, "places"), payload);
+        await updateDoc(docPla, { id: docPla.id });
         if (input.firstReview != ''){
           if(auth.currentUser?.displayName){
             const review: Review = {
-              id: 1,
+              id: Date.now().toString(),
               placeId: payload.id,
               user: auth.currentUser.displayName,
-              rating: 5,
+              rating: input.firstReviewScore,
               text: input.firstReview.trim(),
               createdAt: Date.now().toString()
             };
 
 
-            await setDoc(doc(db, "reviews", review.id.toString()), review)
-
+            const docRev = await addDoc(collection(db, "reviews"), review);
+            await updateDoc(docRev, { id: docRev.id, placeId: docPla.id });
+            
           }
         }
         
-        await setDoc(doc(db, "places", payload.id.toString()), payload)
+        
+        
+        
 
         return payload;
       } catch (error) {

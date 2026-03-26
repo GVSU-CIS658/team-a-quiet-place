@@ -131,23 +131,6 @@
               </template>
             </div>
 
-            <div class="d-flex align-center ga-3 mb-4 flex-wrap">
-              <div class="d-flex align-center ga-2">
-                <v-rating
-                  :model-value="5"
-                  half-increments
-                  readonly
-                  density="compact"
-                  color="primary"
-                  size="small"
-                />
-                <span class="text-body-2 font-weight-medium">5.0</span>
-                <span class="text-body-2 text-medium-emphasis">
-                  (0 reviews)
-                </span>
-              </div>
-            </div>
-
             <div class="d-flex flex-wrap ga-2 mb-1">
               <v-chip
                 v-for="tag in tags"
@@ -185,6 +168,22 @@
               <v-btn variant="tonal" color="primary" rounded="xl" disabled>
                 Add a review
               </v-btn>
+            </div>
+
+            <div class="d-flex align-center ga-3 mb-4 flex-wrap">
+              <div class="d-flex align-center ga-2">
+                <v-rating
+                  v-model="reviewRating"
+                  half-increments
+                  density="compact"
+                  color="primary"
+                  size="small"
+                />
+                <span class="text-body-2 font-weight-medium">{{ reviewRating }}</span>
+                <span class="text-body-2 text-medium-emphasis">
+                  (0 reviews)
+                </span>
+              </div>
             </div>
 
             <div class="first-review-box mb-3">
@@ -261,6 +260,7 @@ const location = ref("Campus location");
 const description = ref(
   "Describe what makes this place calm, comfortable, or good for studying.",
 );
+const reviewRating = ref(5)
 const firstReview = ref("");
 
 const tags = ref<string[]>(["quiet"]);
@@ -371,6 +371,7 @@ async function handleSubmit() {
     images: [imagePreviewUrl.value],
     tags: tags.value,
     firstReview: firstReview.value.trim(),
+    firstReviewScore: reviewRating.value
   });
 
   router.push({ name: "home" });

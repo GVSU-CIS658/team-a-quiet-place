@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import type { Place } from "../types/data";
-import { onSnapshot, collection } from "firebase/firestore";
+import { onSnapshot, collection} from "firebase/firestore";
 import { db } from '../firebase/firebase'
 
 let unsubscribe: (() => void) | null = null;
@@ -76,15 +76,5 @@ export const usePlacesStore = defineStore("places", {
         console.error('Error fetching data: ', error);
       }
     },
-
-    /*async mocktodatabase(){
-      try {
-        this.places.forEach(async (place) => {
-          await setDoc(doc(db, "places", place.id.toString()), place)
-        })
-      }catch(error) {
-        console.error('Error fetching data: ', error);
-      }
-    }*/
   },
 });

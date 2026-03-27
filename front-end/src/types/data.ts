@@ -4,7 +4,7 @@ export type Review = {
   user: string;
   rating: number;
   text: string;
-  createdAt: string;
+  createdAt: number;
 };
 
 export type Place = {

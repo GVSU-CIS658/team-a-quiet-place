@@ -1,15 +1,22 @@
 import { defineStore } from "pinia";
 import type { Review } from "../types/data";
-import mockReviews from "../mockdata/mockReviews.json";
+import { doc, getDoc, onSnapshot, collection, updateDoc, addDoc, deleteDoc} from "firebase/firestore";
+import { auth, db } from '../firebase/firebase'
+
+let unsubscribe: (() => void) | null = null;
 
 export const useReviewsStore = defineStore("reviews", {
   state: () => ({
-    reviews: mockReviews as Review[],
+    reviews: [] as Review[],
+
+    isSubmitting: false,
+    error: null as string | null,
+
   }),
 
   getters: {
     getReviewsForPlace: (state) => {
-      return (placeId: number): Review[] => {
+      return (placeId: string): Review[] => {
         return state.reviews
           .filter((review) => review.placeId === placeId)
           .sort((a, b) => {
@@ -21,14 +28,14 @@ export const useReviewsStore = defineStore("reviews", {
     },
 
     getReviewCountForPlace: (state) => {
-      return (placeId: number): number => {
+      return (placeId: string): number => {
         return state.reviews.filter((review) => review.placeId === placeId)
           .length;
       };
     },
 
     getAverageRatingForPlace: (state) => {
-      return (placeId: number): number => {
+      return (placeId: string): number => {
         const placeReviews = state.reviews.filter(
           (review) => review.placeId === placeId,
         );
@@ -45,24 +52,99 @@ export const useReviewsStore = defineStore("reviews", {
   },
 
   actions: {
-    addReview(newReview: Omit<Review, "id" | "createdAt">) {
-      const nextId =
-        this.reviews.length > 0
-          ? Math.max(...this.reviews.map((review) => review.id)) + 1
-          : 1;
+    async addReview(newReview: Omit<Review, "id" | "createdAt" | "user">) {
+      this.isSubmitting = true;
+      this.error = null;
+      try {
+        if (newReview.text != ''){
+          if(auth.currentUser?.displayName){
+            const review: Review = {
+              id: Date.now().toString(),
+              placeId: newReview.placeId,
+              user: auth.currentUser.displayName,
+              rating: newReview.rating,
+              text: newReview.text,
+              createdAt: Date.now()
+            };
 
-      this.reviews.push({
-        id: nextId,
-        placeId: newReview.placeId,
-        user: newReview.user,
-        rating: newReview.rating,
-        text: newReview.text,
-        createdAt: new Date().toISOString(),
-      });
+
+            const docRev = await addDoc(collection(db, "reviews"), review);
+            await updateDoc(docRev, { id: docRev.id });
+            
+            const placeRef = doc(db, "places", newReview.placeId);
+            const placeDoc = await getDoc(placeRef);
+            
+            if(placeDoc.exists()){
+              const placeData = placeDoc.data();
+
+              const prevRev = placeData.reviews ?? 0;
+              const prevRat = placeData.rating ?? 0;
+
+              const newRev = prevRev + 1;
+              const newRat = (prevRat * prevRev + newReview.rating) / newRev;
+              await updateDoc(placeRef, {reviews: newRev, rating: newRat});
+            }
+            
+          }
+        }
+      } catch (error) {
+        this.error = "Failed to create review.";
+        throw error;
+      } finally {
+        this.isSubmitting = false;
+      }
     },
 
-    removeReview(reviewId: number) {
-      this.reviews = this.reviews.filter((review) => review.id !== reviewId);
+    async removeReview(reviewId: string) {
+      const reviewRef = doc(db, "reviews", reviewId);
+      const reviewDoc = await getDoc(reviewRef);
+      if(reviewDoc.exists()){
+        const placeID = reviewDoc.data().placeId
+        const oldRating = reviewDoc.data().rating
+
+        await deleteDoc(doc(db, "reviews", reviewId));
+
+        const placeRef = doc(db, "places", placeID);
+        const placeDoc = await getDoc(placeRef);
+        
+        if(placeDoc.exists()){
+          const placeData = placeDoc.data();
+
+          const prevRev = placeData.reviews ?? 0;
+          const prevRat = placeData.rating ?? 0;
+
+          const newRev = prevRev - 1;
+          const newRat = (prevRat * prevRev - oldRating) / newRev;
+          await updateDoc(placeRef, {reviews: newRev, rating: newRat});
+        }
+
+      }
+
     },
+
+    async getReviewsDB(){
+          try {
+            if (unsubscribe) return;
+    
+            unsubscribe = onSnapshot(collection(db, "reviews"), (snapshot) => {
+              this.reviews = snapshot.docs.map((doc) => {
+                const data = doc.data();
+    
+                const placedb: Review = {
+                  id: data.id,
+                  placeId: data.placeId,
+                  createdAt: data.createdAt,
+                  rating: data.rating,
+                  text: data.text,
+                  user: data.user,
+                };
+                return placedb;
+              });
+            });
+          }catch(error) {
+            console.error('Error fetching data: ', error);
+          }
+        },
+
   },
 });

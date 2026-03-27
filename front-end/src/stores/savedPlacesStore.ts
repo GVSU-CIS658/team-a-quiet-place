@@ -38,13 +38,13 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
     },
 
     isSaved: (state) => {
-      return (placeId: number) =>
+      return (placeId: string) =>
         state.saved.some((p) => p.placeId === placeId);
     },
   },
 
   actions: {
-    savePlace(placeId: number) {
+    savePlace(placeId: string) {
       if (!this.saved.some((p) => p.placeId === placeId)) {
         this.saved.push({
           placeId,
@@ -53,7 +53,7 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
       }
     },
 
-    removePlace(placeId: number) {
+    removePlace(placeId: string) {
       this.saved = this.saved.filter((p) => p.placeId !== placeId);
     },
 

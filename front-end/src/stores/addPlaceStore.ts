@@ -30,7 +30,7 @@ export const useAddPlaceStore = defineStore("addPlace", {
           name: input.name.trim(),
           location: input.location.trim(),
           description: input.description.trim(),
-          rating: 5,
+          rating: 0,
           reviews: 0,
           images: input.images,
           tags: input.tags,
@@ -45,20 +45,16 @@ export const useAddPlaceStore = defineStore("addPlace", {
               user: auth.currentUser.displayName,
               rating: input.firstReviewScore,
               text: input.firstReview.trim(),
-              createdAt: Date.now().toString()
+              createdAt: Date.now()
             };
 
 
             const docRev = await addDoc(collection(db, "reviews"), review);
             await updateDoc(docRev, { id: docRev.id, placeId: docPla.id });
+            await updateDoc(docPla, { rating: input.firstReviewScore, reviews: 1 });
             
           }
         }
-        
-        
-        
-        
-
         return payload;
       } catch (error) {
         this.error = "Failed to create place.";

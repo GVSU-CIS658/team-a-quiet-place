@@ -99,22 +99,24 @@ const previousPlace = () => {
 
     <FilterFab v-model="filterDialog" :store="placesStore" />
   </div>
-  <v-dialog v-model="auth.showLogoutDialog" max-width="400">
-    <v-card rounded="xl">
-      <v-card-title class="text-h6">
-        Success
-      </v-card-title>
-      <v-card-text>
-        You've been logged out
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer />
-        <v-btn color="primary" @click="auth.showLogoutDialog = false">
-          OK
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+
+    <v-dialog v-model="auth.showLogoutDialog" max-width="400">
+      <v-card rounded="xl">
+        <v-card-title class="text-h6">
+          Success
+        </v-card-title>
+        <v-card-text>
+          You've been logged out
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn color="primary" @click="auth.showLogoutDialog = false">
+            OK
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
 </template>
 
 <style scoped>
@@ -124,11 +126,10 @@ const previousPlace = () => {
 
 .card-stage {
   min-height: 760px;
-  padding-bottom: 90px;
 }
 
 .card-column {
-  width: min(100%, 560px);
+  width: 100%;
   margin: 0 auto;
   position: relative;
 }
@@ -136,7 +137,7 @@ const previousPlace = () => {
 .stage-nav-row {
   display: flex;
   justify-content: center;
-  gap: 24px;
+  gap: 32px;
   margin-top: 22px;
 }
 
@@ -151,7 +152,7 @@ const previousPlace = () => {
 .filter-fab {
   position: fixed;
   bottom: 24px;
-  right: max(16px, calc((100vw - 640px) / 2 + 16px));
+  right: max(16px, calc((100vw - 640px) / 2 + 25px));
   z-index: 1200;
   width: 56px;
   height: 56px;
@@ -186,35 +187,33 @@ const previousPlace = () => {
   transform: translateY(0);
 }
 
-/* Quiet slide transitions */
 .slide-left-enter-active,
 .slide-left-leave-active,
 .slide-right-enter-active,
 .slide-right-leave-active {
   transition:
-    opacity 0.34s ease,
-    transform 0.34s ease;
-  will-change: opacity, transform;
+    opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .slide-left-enter-from {
   opacity: 0;
-  transform: translateX(28px) scale(0.985);
+  transform: translateX(16px);
 }
 
 .slide-left-leave-to {
   opacity: 0;
-  transform: translateX(-28px) scale(0.985);
+  transform: translateX(-16px);
 }
 
 .slide-right-enter-from {
   opacity: 0;
-  transform: translateX(-28px) scale(0.985);
+  transform: translateX(-16px);
 }
 
 .slide-right-leave-to {
   opacity: 0;
-  transform: translateX(28px) scale(0.985);
+  transform: translateX(16px);
 }
 
 @media (max-width: 640px) {

@@ -3,7 +3,7 @@
     "id": 1,
     "name": "Mary Idema Pew Library",
     "location": "2nd Floor",
-    "description": "Soft lighting, quiet corners, and a good place to focus alone.",
+    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus et nulla scelerisque, facilisis ex et, dignissim est. Nulla sit amet nibh condimentum, bibendum dolor sit amet, consequat ante. Nullam rutrum diam est, quis imperdiet urna feugiat nec. Sed porttitor, dui et ultricies euismod, arcu ante tempor sapien, facilisis placerat dui lectus quis justo. Nunc rhoncus arcu ac diam hendrerit, sit amet pulvinar diam pellentesque. Sed facilisis lobortis orci vitae consectetur. Duis eget quam enim. ",
     "rating": 4.6,
     "reviews": 18,
     "images": [
@@ -17,7 +17,7 @@
     "id": 2,
     "name": "Lake Huron Hall Lounge",
     "location": "North Side",
-    "description": "A calm indoor spot between classes with decent seating.",
+    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus et nulla scelerisque, facilisis ex et, dignissim est. Nulla sit amet nibh condimentum, bibendum dolor sit amet, consequat ante. Nullam rutrum diam est, quis imperdiet urna feugiat nec. Sed porttitor, dui et ultricies euismod, arcu ante tempor sapien, facilisis placerat dui lectus quis justo. Nunc rhoncus arcu ac diam hendrerit, sit amet pulvinar diam pellentesque. Sed facilisis lobortis orci vitae consectetur. Duis eget quam enim. ",
     "rating": 4.2,
     "reviews": 11,
     "images": [
@@ -31,7 +31,7 @@
     "id": 3,
     "name": "Arboretum Bench Path",
     "location": "Outdoor Trail",
-    "description": "Quiet outdoor seating with trees and fresh air.",
+    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus et nulla scelerisque, facilisis ex et, dignissim est. Nulla sit amet nibh condimentum, bibendum dolor sit amet, consequat ante. Nullam rutrum diam est, quis imperdiet urna feugiat nec. Sed porttitor, dui et ultricies euismod, arcu ante tempor sapien, facilisis placerat dui lectus quis justo. Nunc rhoncus arcu ac diam hendrerit, sit amet pulvinar diam pellentesque. Sed facilisis lobortis orci vitae consectetur. Duis eget quam enim. ",
     "rating": 4.8,
     "reviews": 26,
     "images": [
@@ -45,7 +45,7 @@
     "id": 4,
     "name": "Kirkhof Study Tables",
     "location": "Main Building",
-    "description": "Open seating area that works well for group study and casual work.",
+    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus et nulla scelerisque, facilisis ex et, dignissim est. Nulla sit amet nibh condimentum, bibendum dolor sit amet, consequat ante. Nullam rutrum diam est, quis imperdiet urna feugiat nec. Sed porttitor, dui et ultricies euismod, arcu ante tempor sapien, facilisis placerat dui lectus quis justo. Nunc rhoncus arcu ac diam hendrerit, sit amet pulvinar diam pellentesque. Sed facilisis lobortis orci vitae consectetur. Duis eget quam enim. ",
     "rating": 4.1,
     "reviews": 9,
     "images": [
@@ -59,7 +59,7 @@
     "id": 5,
     "name": "Campus Coffee Corner",
     "location": "Downtown Campus",
-    "description": "Small coffee shop that is usually calm in the mornings.",
+    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus et nulla scelerisque, facilisis ex et, dignissim est. Nulla sit amet nibh condimentum, bibendum dolor sit amet, consequat ante. Nullam rutrum diam est, quis imperdiet urna feugiat nec. Sed porttitor, dui et ultricies euismod, arcu ante tempor sapien, facilisis placerat dui lectus quis justo. Nunc rhoncus arcu ac diam hendrerit, sit amet pulvinar diam pellentesque. Sed facilisis lobortis orci vitae consectetur. Duis eget quam enim. ",
     "rating": 4.5,
     "reviews": 14,
     "images": [

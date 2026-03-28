@@ -10,10 +10,6 @@
     <div class="drawer-content d-flex flex-column h-100">
       <div>
         <div class="drawer-header">
-          <div class="drawer-badge">
-            <v-icon size="18">mdi-menu</v-icon>
-          </div>
-
           <div>
             <div class="drawer-title">Menu</div>
             <div class="drawer-subtitle">Browse the app</div>

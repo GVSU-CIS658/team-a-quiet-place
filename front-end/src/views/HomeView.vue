@@ -99,22 +99,24 @@ const previousPlace = () => {
 
     <FilterFab v-model="filterDialog" :store="placesStore" />
   </div>
-  <v-dialog v-model="auth.showLogoutDialog" max-width="400">
-    <v-card rounded="xl">
-      <v-card-title class="text-h6">
-        Success
-      </v-card-title>
-      <v-card-text>
-        You've been logged out
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer />
-        <v-btn color="primary" @click="auth.showLogoutDialog = false">
-          OK
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+
+    <v-dialog v-model="auth.showLogoutDialog" max-width="400">
+      <v-card rounded="xl">
+        <v-card-title class="text-h6">
+          Success
+        </v-card-title>
+        <v-card-text>
+          You've been logged out
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn color="primary" @click="auth.showLogoutDialog = false">
+            OK
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
 </template>
 
 <style scoped>
@@ -124,7 +126,6 @@ const previousPlace = () => {
 
 .card-stage {
   min-height: 760px;
-  padding-bottom: 90px;
 }
 
 .card-column {
@@ -136,7 +137,7 @@ const previousPlace = () => {
 .stage-nav-row {
   display: flex;
   justify-content: center;
-  gap: 24px;
+  gap: 32px;
   margin-top: 22px;
 }
 
@@ -151,7 +152,7 @@ const previousPlace = () => {
 .filter-fab {
   position: fixed;
   bottom: 24px;
-  right: max(16px, calc((100vw - 640px) / 2 + 16px));
+  right: max(16px, calc((100vw - 640px) / 2 + 25px));
   z-index: 1200;
   width: 56px;
   height: 56px;

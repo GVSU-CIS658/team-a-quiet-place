@@ -53,21 +53,25 @@ const route = useRoute();
 .layout-shell {
   width: min(100%, 640px);
   margin: 0 auto;
-  padding: 20px 16px 32px;
+  padding: 12px 16px 32px;
 }
 
 .top-bar {
   position: sticky;
-  top: 0;
+  top: 12px;
   z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
   min-height: 56px;
-  margin-bottom: 24px;
-  padding: 8px 0;
-  background: rgba(247, 249, 252, 0.92);
-  backdrop-filter: blur(10px);
+  margin: 0px 12px 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(31, 45, 61, 0.08);
 }
 
 .menu-btn {
@@ -107,11 +111,14 @@ const route = useRoute();
 
 @media (max-width: 640px) {
   .layout-shell {
-    padding: 16px 16px 24px;
+    padding: 12px 16px 24px;
   }
 
   .top-bar {
+    top: 8px;
     margin-bottom: 20px;
+    border-radius: 18px;
+    padding: 8px 10px;
   }
 
   .app-title {

@@ -76,6 +76,7 @@ function closePlace() {
     <transition name="overlay-fade">
       <div v-if="selectedPlace" class="place-overlay" @click="closePlace">
         <div class="place-overlay-content" @click.stop>
+          <PlaceCard :place="selectedPlace" />
           <div class="place-overlay-actions">
             <v-btn
               icon="mdi-close"
@@ -84,8 +85,6 @@ function closePlace() {
               @click="closePlace"
             />
           </div>
-
-          <PlaceCard :place="selectedPlace" />
         </div>
       </div>
     </transition>
@@ -104,7 +103,7 @@ function closePlace() {
 <style scoped>
 .saved-page {
   min-height: 100%;
-  padding: 8px 16px 32px;
+  padding: 8px 0px 32px;
 }
 
 .saved-grid-wrap {
@@ -177,24 +176,24 @@ function closePlace() {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 40px 16px;
+  padding: 88px 16px 32px;
   overflow-y: auto;
 }
 
 .place-overlay-content {
-  width: min(100%, 560px);
+  width: min(100%, 640px);
 }
 
 .place-overlay-actions {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 8px;
+  justify-content: center;
+  margin-top: 12px;
 }
 
 .filter-fab {
   position: fixed;
   bottom: 24px;
-  right: max(16px, calc((100vw - 640px) / 2 + 16px));
+  right: max(16px, calc((100vw - 640px) / 2 + 25px));
   z-index: 1200;
   width: 56px;
   height: 56px;

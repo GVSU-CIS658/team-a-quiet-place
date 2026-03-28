@@ -176,7 +176,6 @@ onBeforeUnmount(() => {
                       class="upload-btn"
                       @click="triggerImageUpload"
                     />
-
                     <div class="image-counter">1 / 1</div>
                   </div>
                 </div>
@@ -209,8 +208,8 @@ onBeforeUnmount(() => {
             />
           </div>
 
-          <v-card-text class="pa-6">
-            <div class="title-row mb-2">
+          <v-card-text class="card-body">
+            <div class="title-row">
               <div class="title-edit-area">
                 <template v-if="editingField === 'name'">
                   <v-text-field
@@ -239,7 +238,7 @@ onBeforeUnmount(() => {
               <v-btn icon="mdi-heart" variant="text" color="primary" />
             </div>
 
-            <div class="description-block mb-4">
+            <div class="description-block">
               <template v-if="editingField === 'description'">
                 <v-textarea
                   v-model="description"
@@ -268,7 +267,7 @@ onBeforeUnmount(() => {
               </template>
             </div>
 
-            <div class="d-flex align-center ga-3 mb-4 flex-wrap">
+            <div class="rating-row">
               <div class="d-flex align-center ga-2">
                 <v-rating
                   :model-value="5"
@@ -285,19 +284,21 @@ onBeforeUnmount(() => {
               </div>
             </div>
 
-            <div class="d-flex flex-wrap ga-2 mb-1">
-              <v-chip
-                v-for="tag in tags"
-                :key="tag"
-                size="small"
-                variant="tonal"
-                color="primary"
-                rounded="lg"
-                closable
-                @click:close="removeTag(tag)"
-              >
-                {{ tag }}
-              </v-chip>
+            <div class="tags-section">
+              <div class="chips-row">
+                <v-chip
+                  v-for="tag in tags"
+                  :key="tag"
+                  size="small"
+                  variant="tonal"
+                  color="primary"
+                  rounded="lg"
+                  closable
+                  @click:close="removeTag(tag)"
+                >
+                  {{ tag }}
+                </v-chip>
+              </div>
 
               <div class="tag-input-wrap">
                 <v-text-field
@@ -310,21 +311,19 @@ onBeforeUnmount(() => {
                   @keydown.enter.prevent="addTag"
                 />
               </div>
+
+              <div v-if="!hasAtLeastOneTag" class="text-caption text-error">
+                Add at least one tag.
+              </div>
             </div>
 
-            <div v-if="!hasAtLeastOneTag" class="text-caption text-error mb-4">
-              Add at least one tag.
-            </div>
-
-            <div v-else class="mb-4"></div>
-
-            <div class="review-toggle-row mb-3">
+            <div class="review-toggle-row">
               <v-btn variant="tonal" color="primary" rounded="xl" disabled>
                 Add a review
               </v-btn>
             </div>
 
-            <div class="first-review-box mb-3">
+            <div class="first-review-box">
               <template v-if="editingField === 'review'">
                 <v-textarea
                   v-model="firstReview"
@@ -352,32 +351,27 @@ onBeforeUnmount(() => {
                 </div>
               </template>
             </div>
-
-            <div class="helper-text">
-              Click directly on the card to edit its content.
-            </div>
           </v-card-text>
         </v-card>
 
         <div class="actions-row">
           <v-btn
+            icon="mdi-close"
             variant="text"
-            rounded="xl"
+            color="grey"
             @click="router.push({ name: 'home' })"
-          >
-            Cancel
-          </v-btn>
+          />
 
           <v-btn
+            icon="mdi-check"
+            variant="flat"
             color="primary"
-            rounded="xl"
-            type="submit"
             :loading="addPlaceStore.isSubmitting"
             :disabled="!canSubmit"
-          >
-            Add Place
-          </v-btn>
+            @click="handleSubmit"
+          />
         </div>
+
       </v-form>
     </div>
   </div>
@@ -386,11 +380,12 @@ onBeforeUnmount(() => {
 <style scoped>
 .add-place-page {
   min-height: 100%;
-  padding: 12px 16px 32px;
+  padding: 0px 0 36px;
 }
 
 .editor-shell {
-  max-width: 560px;
+  width: 100%;
+  max-width: 640px;
   margin: 0 auto;
 }
 
@@ -464,6 +459,13 @@ onBeforeUnmount(() => {
   background: rgba(255, 255, 255, 0.9);
 }
 
+.card-body {
+  padding: 24px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
 .title-row {
   display: flex;
   align-items: flex-start;
@@ -473,6 +475,7 @@ onBeforeUnmount(() => {
 
 .title-edit-area {
   flex: 1;
+  min-width: 0;
 }
 
 .description-block {
@@ -497,9 +500,27 @@ onBeforeUnmount(() => {
   background: rgba(47, 93, 159, 0.06);
 }
 
+.rating-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.tags-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .tag-input-wrap {
-  min-width: 120px;
-  flex: 1 1 140px;
+  min-width: 140px;
+  max-width: 220px;
 }
 
 .review-toggle-row {
@@ -522,7 +543,7 @@ onBeforeUnmount(() => {
 }
 
 .helper-text {
-  margin-top: 16px;
+  margin-top: 4px;
   text-align: center;
   font-size: 0.88rem;
   color: #6b7280;
@@ -530,9 +551,15 @@ onBeforeUnmount(() => {
 
 .actions-row {
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 18px;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.actions-row :deep(.v-btn) {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
 }
 
 .hidden-file-input {
@@ -540,8 +567,18 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 640px) {
+  .add-place-page {
+    padding: 12px 0 28px;
+  }
+
+  .card-body {
+    padding: 20px !important;
+    gap: 16px;
+  }
+
   .actions-row {
     flex-direction: column-reverse;
+    margin-top: 16px;
   }
 
   .actions-row :deep(.v-btn) {
@@ -551,6 +588,10 @@ onBeforeUnmount(() => {
   .location-edit-wrap {
     min-width: 140px;
     max-width: 180px;
+  }
+
+  .tag-input-wrap {
+    max-width: none;
   }
 }
 </style>

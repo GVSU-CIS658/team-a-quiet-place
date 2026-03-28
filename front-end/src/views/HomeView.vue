@@ -128,7 +128,7 @@ const previousPlace = () => {
 }
 
 .card-column {
-  width: min(100%, 560px);
+  width: 100%;
   margin: 0 auto;
   position: relative;
 }

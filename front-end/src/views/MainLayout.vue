@@ -17,7 +17,7 @@ const route = useRoute();
           <v-btn
             class="menu-btn"
             icon="mdi-menu"
-            variant="text"
+            variant="tonal"
             color="primary"
             @click="drawer = true"
           />

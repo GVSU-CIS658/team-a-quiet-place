@@ -1,37 +1,3 @@
-<script setup lang="ts">
-import { computed, ref } from "vue";
-import FilterFab from "../components/FilterFab.vue";
-import PlaceCard from "../components/PlaceCard.vue";
-import { useSavedPlacesStore } from "../stores/savedPlacesStore";
-
-const savedPlacesStore = useSavedPlacesStore();
-const filterDialog = ref(false);
-
-const filteredSavedPlaces = computed(
-  () => savedPlacesStore.filteredSavedPlaces,
-);
-
-const selectedPlaceId = ref<number | null>(null);
-
-const selectedPlace = computed(() => {
-  if (selectedPlaceId.value === null) return null;
-
-  return (
-    filteredSavedPlaces.value.find(
-      (place) => place.id === selectedPlaceId.value,
-    ) ?? null
-  );
-});
-
-function openPlace(placeId: number) {
-  selectedPlaceId.value = placeId;
-}
-
-function closePlace() {
-  selectedPlaceId.value = null;
-}
-</script>
-
 <template>
   <div class="saved-page">
     <div v-if="filteredSavedPlaces.length > 0" class="saved-grid-wrap">
@@ -100,6 +66,43 @@ function closePlace() {
     <FilterFab v-model="filterDialog" :store="savedPlacesStore" />
   </div>
 </template>
+
+<script setup lang="ts">
+import { computed, ref, onMounted } from "vue";
+import FilterFab from "../components/FilterFab.vue";
+import PlaceCard from "../components/PlaceCard.vue";
+import { useSavedPlacesStore } from "../stores/savedPlacesStore";
+
+const savedPlacesStore = useSavedPlacesStore();
+
+const filterDialog = ref(false);
+
+const filteredSavedPlaces = computed(
+  () => savedPlacesStore.filteredSavedPlaces,
+);
+onMounted(async () => {
+  await savedPlacesStore.getSavesDB();
+});
+const selectedPlaceId = ref<string | null>(null);
+
+const selectedPlace = computed(() => {
+  if (selectedPlaceId.value === null) return null;
+
+  return (
+    filteredSavedPlaces.value.find(
+      (place) => place.id === selectedPlaceId.value,
+    ) ?? null
+  );
+});
+
+function openPlace(placeId: string) {
+  selectedPlaceId.value = placeId;
+}
+
+function closePlace() {
+  selectedPlaceId.value = null;
+}
+</script>
 
 <style scoped>
 .saved-page {

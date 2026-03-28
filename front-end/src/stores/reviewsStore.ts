@@ -96,29 +96,37 @@ export const useReviewsStore = defineStore("reviews", {
     },
 
     async removeReview(reviewId: string) {
-      const reviewRef = doc(db, "reviews", reviewId);
-      const reviewDoc = await getDoc(reviewRef);
-      if(reviewDoc.exists()){
-        const placeID = reviewDoc.data().placeId
-        const oldRating = reviewDoc.data().rating
+      try{
+        const reviewRef = doc(db, "reviews", reviewId);
+        const reviewDoc = await getDoc(reviewRef);
+        if(reviewDoc.exists()){
+          const placeID = reviewDoc.data().placeId
+          const oldRating = reviewDoc.data().rating
 
-        await deleteDoc(doc(db, "reviews", reviewId));
+          await deleteDoc(doc(db, "reviews", reviewId));
 
-        const placeRef = doc(db, "places", placeID);
-        const placeDoc = await getDoc(placeRef);
-        
-        if(placeDoc.exists()){
-          const placeData = placeDoc.data();
+          const placeRef = doc(db, "places", placeID);
+          const placeDoc = await getDoc(placeRef);
+          
+          if(placeDoc.exists()){
+            const placeData = placeDoc.data();
 
-          const prevRev = placeData.reviews ?? 0;
-          const prevRat = placeData.rating ?? 0;
+            const prevRev = placeData.reviews ?? 0;
+            const prevRat = placeData.rating ?? 0;
 
-          const newRev = prevRev - 1;
-          const newRat = (prevRat * prevRev - oldRating) / newRev;
-          await updateDoc(placeRef, {reviews: newRev, rating: newRat});
+            const newRev = prevRev - 1;
+            const newRat = (prevRat * prevRev - oldRating) / newRev;
+            await updateDoc(placeRef, {reviews: newRev, rating: newRat});
+          }
+
         }
-
+      }catch (error) {
+        this.error = "Failed to delete review.";
+        throw error;
+      } finally {
+        this.isSubmitting = false;
       }
+      
 
     },
 

@@ -1,11 +1,16 @@
 import { defineStore } from "pinia";
-import mockSaved from "../mockdata/mockSavedPlaces.json";
 import { usePlacesStore } from "./placesStore";
-import type { Place } from "../types/data";
+import type { Place, Saves } from "../types/data";
+import {collection, updateDoc, addDoc, onSnapshot, doc, getDocs, deleteDoc, query, where} from "firebase/firestore";
+import { auth, db } from '../firebase/firebase'
+
+let unsubscribe: (() => void) | null = null;
 
 export const useSavedPlacesStore = defineStore("savedPlaces", {
   state: () => ({
-    saved: mockSaved,
+    saved: [] as Saves[],
+    isSubmitting: false,
+    error: null as string | null,
 
     filters: {
       location: "",
@@ -44,17 +49,53 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
   },
 
   actions: {
-    savePlace(placeId: string) {
-      if (!this.saved.some((p) => p.placeId === placeId)) {
-        this.saved.push({
-          placeId,
-          savedAt: new Date().toISOString(),
-        });
+    async savePlace(placeId: string) {
+      this.isSubmitting = true;
+      this.error = null;
+      try {
+        if(auth.currentUser?.uid){
+          const saves: Saves = {
+            id: Date.now().toString(),
+            placeId: placeId,
+            user: auth.currentUser.uid,
+            savedAt: Date.now()
+          };
+
+
+          const docSav = await addDoc(collection(db, "saves"), saves);
+          await updateDoc(docSav, { id: docSav.id });
+        }
+      } catch (error) {
+        this.error = "Failed to create save.";
+        throw error;
+      } finally {
+        this.isSubmitting = false;
       }
     },
 
-    removePlace(placeId: string) {
-      this.saved = this.saved.filter((p) => p.placeId !== placeId);
+    async removePlace(placeId: string) {
+      try {
+        if(auth.currentUser?.uid){
+          const uid = auth.currentUser.uid;
+
+          const saveRef = query(
+            collection(db, "saves"),
+            where("placeId", "==", placeId),
+            where("user", "==", uid)
+          );
+          const saveDoc = await getDocs(saveRef);
+        
+
+          saveDoc.forEach(async (save) => {
+            await deleteDoc(doc(db, "saves", save.id));
+          });
+        }
+      }catch (error) {
+        this.error = "Failed to delete save.";
+        throw error;
+      } finally {
+        this.isSubmitting = false;
+      }
     },
 
     resetFilters() {
@@ -69,5 +110,45 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
     setRatingFilter(rating: number | null) {
       this.filters.rating = rating;
     },
+
+    async getSavesDB(){
+      try {
+        if (unsubscribe) return;
+        if (!auth.currentUser?.uid) return;
+
+        const uid = auth.currentUser.uid;
+
+        const userSaves = query(
+          collection(db, "saves"),
+          where("user", "==", uid)
+        );
+
+        unsubscribe = onSnapshot(userSaves, (snapshot) => {
+          this.saved = snapshot.docs.map((doc) => {
+            const data = doc.data();
+
+            const savedb: Saves = {
+              id: data.id,
+              placeId: data.placeId,
+              user: data.user,
+              savedAt: data.savedAt,
+            };
+            return savedb;
+          });
+        });
+      }catch(error) {
+        console.error('Error fetching data: ', error);
+      }
+    },
+    stopListener() {
+      if (unsubscribe) {
+        unsubscribe();
+        unsubscribe = null;
+      }
+    },
+
+    clearSaved() {
+      this.saved = [];
+    }
   },
 });

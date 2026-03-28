@@ -17,3 +17,10 @@ export type Place = {
   images: string[];
   tags: string[];
 };
+
+export type Saves = {
+  id: string;
+  placeId: string;
+  savedAt: number;
+  user: string;
+};

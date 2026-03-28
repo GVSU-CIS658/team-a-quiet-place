@@ -187,35 +187,33 @@ const previousPlace = () => {
   transform: translateY(0);
 }
 
-/* Quiet slide transitions */
 .slide-left-enter-active,
 .slide-left-leave-active,
 .slide-right-enter-active,
 .slide-right-leave-active {
   transition:
-    opacity 0.34s ease,
-    transform 0.34s ease;
-  will-change: opacity, transform;
+    opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .slide-left-enter-from {
   opacity: 0;
-  transform: translateX(28px) scale(0.985);
+  transform: translateX(16px);
 }
 
 .slide-left-leave-to {
   opacity: 0;
-  transform: translateX(-28px) scale(0.985);
+  transform: translateX(-16px);
 }
 
 .slide-right-enter-from {
   opacity: 0;
-  transform: translateX(-28px) scale(0.985);
+  transform: translateX(-16px);
 }
 
 .slide-right-leave-to {
   opacity: 0;
-  transform: translateX(28px) scale(0.985);
+  transform: translateX(16px);
 }
 
 @media (max-width: 640px) {

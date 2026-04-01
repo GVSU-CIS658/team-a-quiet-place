@@ -1,36 +1,33 @@
 <template>
   <v-card class="place-card" rounded="xl" elevation="4">
     <div class="image-wrapper">
-      <v-img :src="place.images[imageIndex]" height="430" cover>
-        <div class="image-overlay">
-          <div class="top-image-row">
-            <div class="location-pill">
-              {{ place.location }}
-            </div>
+      <v-carousel
+        v-model="imageIndex"
+        height="430"
+        :show-arrows="place.images.length > 1 ? 'hover' : false"
+        hide-delimiter-background
+        delimiter-icon="mdi-circle"
+        class="place-carousel"
+      >
+        <v-carousel-item
+          v-for="(image, index) in place.images"
+          :key="`${place.id}-${index}`"
+        >
+          <v-img :src="image" height="430" cover>
+            <div class="image-overlay">
+              <div class="top-image-row">
+                <div class="location-pill">
+                  {{ place.location }}
+                </div>
 
-            <div class="image-counter">
-              {{ imageIndex + 1 }} / {{ place.images.length }}
+                <div class="image-counter">
+                  {{ imageIndex + 1 }} / {{ place.images.length }}
+                </div>
+              </div>
             </div>
-          </div>
-
-          <div class="image-nav">
-            <v-btn
-              icon="mdi-chevron-left"
-              size="small"
-              variant="flat"
-              class="nav-btn"
-              @click.stop="previousImage"
-            />
-            <v-btn
-              icon="mdi-chevron-right"
-              size="small"
-              variant="flat"
-              class="nav-btn"
-              @click.stop="nextImage"
-            />
-          </div>
-        </div>
-      </v-img>
+          </v-img>
+        </v-carousel-item>
+      </v-carousel>
     </div>
 
     <v-card-text class="pa-6">
@@ -110,10 +107,6 @@
         </div>
       </v-expand-transition>
 
-      <div class="helper-text">
-        Browse freely. You’ll only need to sign in to save a place or post a
-        review.
-      </div>
     </v-card-text>
   </v-card>
 </template>
@@ -204,16 +197,6 @@ const toggleSaved = () => {
     savedPlacesStore.savePlace(props.place.id);
   }
 };
-
-const nextImage = () => {
-  imageIndex.value = (imageIndex.value + 1) % props.place.images.length;
-};
-
-const previousImage = () => {
-  imageIndex.value =
-    (imageIndex.value - 1 + props.place.images.length) %
-    props.place.images.length;
-};
 </script>
 
 <style scoped>
@@ -225,6 +208,11 @@ const previousImage = () => {
 
 .image-wrapper {
   position: relative;
+}
+
+.place-carousel {
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
 }
 
 .image-overlay {
@@ -261,19 +249,9 @@ const previousImage = () => {
   border-radius: 999px;
 }
 
-.image-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.nav-btn {
-  background: rgba(255, 255, 255, 0.9);
-}
-
 .title-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
@@ -303,5 +281,74 @@ const previousImage = () => {
   text-align: center;
   font-size: 0.88rem;
   color: #6b7280;
+}
+
+/* softer carousel controls */
+.place-carousel :deep(.v-window__controls) {
+  padding: 0 12px;
+}
+
+.place-carousel :deep(.v-window__left),
+.place-carousel :deep(.v-window__right) {
+  margin: 0 6px;
+}
+
+.place-carousel :deep(.v-btn.v-window__left),
+.place-carousel :deep(.v-btn.v-window__right) {
+  background: rgba(255, 255, 255, 0.72);
+  color: #1f2d3d;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(31, 45, 61, 0.12);
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.place-carousel :deep(.v-btn.v-window__left:hover),
+.place-carousel :deep(.v-btn.v-window__right:hover) {
+  background: rgba(255, 255, 255, 0.9);
+  transform: scale(1.04);
+  box-shadow: 0 8px 22px rgba(31, 45, 61, 0.16);
+}
+
+.place-carousel :deep(.v-carousel__controls) {
+  background: transparent;
+  height: 34px;
+}
+
+.place-carousel :deep(.v-carousel__controls__item) {
+  margin: 0 2px;
+  opacity: 0.5;
+  transform: scale(0.9);
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
+}
+
+.place-carousel :deep(.v-carousel__controls__item--active) {
+  opacity: 0.95;
+  transform: scale(1);
+}
+
+/* softer slide/fade */
+.place-carousel :deep(.v-window-x-transition-enter-active),
+.place-carousel :deep(.v-window-x-transition-leave-active),
+.place-carousel :deep(.v-window-x-reverse-transition-enter-active),
+.place-carousel :deep(.v-window-x-reverse-transition-leave-active) {
+  transition:
+    transform 0.42s ease,
+    opacity 0.42s ease !important;
+}
+
+.place-carousel :deep(.v-window-x-transition-enter-from),
+.place-carousel :deep(.v-window-x-reverse-transition-enter-from) {
+  opacity: 0.82;
+}
+
+.place-carousel :deep(.v-window-x-transition-leave-to),
+.place-carousel :deep(.v-window-x-reverse-transition-leave-to) {
+  opacity: 0.82;
 }
 </style>

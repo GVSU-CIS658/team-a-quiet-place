@@ -4,6 +4,7 @@ import { updateDoc, addDoc, collection } from "firebase/firestore";
 import { auth, db, store } from '../firebase/firebase'
 import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
 
+
 type CreatePlaceInput = {
   name: string;
   location: string;

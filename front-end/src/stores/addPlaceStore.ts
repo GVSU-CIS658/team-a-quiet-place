@@ -1,7 +1,8 @@
 import { defineStore } from "pinia";
 import type { Place, Review} from "../types/data";
 import { updateDoc, addDoc, collection } from "firebase/firestore";
-import { auth, db } from '../firebase/firebase'
+import { auth, db, store } from '../firebase/firebase'
+import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
 
 type CreatePlaceInput = {
   name: string;
@@ -21,7 +22,6 @@ export const useAddPlaceStore = defineStore("addPlace", {
 
   actions: {
     async createPlace(input: CreatePlaceInput): Promise<Place> {
-      this.isSubmitting = true;
       this.error = null;
 
       try {
@@ -63,5 +63,13 @@ export const useAddPlaceStore = defineStore("addPlace", {
         this.isSubmitting = false;
       }
     },
+    async uploadImage(file:File): Promise<string>{
+      const storageRef = ref(store, `images/${Date.now()}-${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      return downloadURL;
+
+    }
   },
 });

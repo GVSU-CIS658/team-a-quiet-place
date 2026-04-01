@@ -4,7 +4,7 @@
       <v-form ref="formRef" @submit.prevent="handleSubmit">
         <v-card class="place-card" rounded="xl" elevation="4">
           <div class="image-wrapper">
-            <v-img :src="imagePreviewUrl" height="430" cover>
+            <v-img :src="imagePreviewUrl[imageIndex]" height="430" cover>
               <div class="image-overlay">
                 <div class="top-image-row">
                   <template v-if="editingField === 'location'">
@@ -33,6 +33,14 @@
 
                   <div class="image-counter-wrap">
                     <v-btn
+                      icon="mdi-trash-can"
+                      size="small"
+                      variant="flat"
+                      class="delete-btn"
+                      @click="deleteImage"
+                    />
+
+                    <v-btn
                       icon="mdi-camera-plus-outline"
                       size="small"
                       variant="flat"
@@ -40,7 +48,7 @@
                       @click="triggerImageUpload"
                     />
 
-                    <div class="image-counter">1 / 1</div>
+                    <div class="image-counter">{{ imageIndex + 1 }} / {{ imagePreviewUrl.length }}</div>
                   </div>
                 </div>
 
@@ -50,14 +58,14 @@
                     size="small"
                     variant="flat"
                     class="nav-btn"
-                    disabled
+                    @click.stop="previousImage"
                   />
                   <v-btn
                     icon="mdi-chevron-right"
                     size="small"
                     variant="flat"
                     class="nav-btn"
-                    disabled
+                    @click.stop="nextImage"
                   />
                 </div>
               </div>
@@ -267,9 +275,10 @@ const tags = ref<string[]>(["quiet"]);
 const tagInput = ref("");
 
 const imagePreviewUrl = ref(
-  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
+  ["https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80"],
 );
-
+const images = [] as File[];
+const imageIndex = ref(0);
 const editingField = ref<"name" | "location" | "description" | "review" | null>(
   null,
 );
@@ -331,16 +340,43 @@ function triggerImageUpload() {
   fileInputRef.value?.click();
 }
 
-function handleImageSelected(event: Event) {
+function deleteImage() {
+  imagePreviewUrl.value.splice(imageIndex.value, 1);
+  if (imagePreviewUrl.value.length == 0){
+    imagePreviewUrl.value.push("https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80");
+  }
+
+  if (images.length != 0){
+    images.splice(imageIndex.value, 1);
+  }
+  if (imageIndex.value >= imagePreviewUrl.value.length){
+    imageIndex.value--;
+  }
+}
+
+async function handleImageSelected(event: Event) {
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
   if (!file) return;
 
-  if (imagePreviewUrl.value.startsWith("blob:")) {
-    URL.revokeObjectURL(imagePreviewUrl.value);
+  if (imagePreviewUrl.value[0]){
+    if (imagePreviewUrl.value.length === 1 && !imagePreviewUrl.value[0].startsWith("blob:")) {
+      imagePreviewUrl.value = [];
+    }
   }
+  const isDuplicate = images.some(f =>
+    f.name === file.name &&
+    f.size === file.size &&
+    f.lastModified === file.lastModified
+  );
 
-  imagePreviewUrl.value = URL.createObjectURL(file);
+
+  if (!isDuplicate){
+    imagePreviewUrl.value.push(URL.createObjectURL(file));
+    images.push(file)
+  }
+  
+  target.value = "";
 }
 
 function addTag() {
@@ -359,16 +395,25 @@ function removeTag(tag: string) {
 }
 
 async function handleSubmit() {
+  addPlaceStore.isSubmitting = true;
   const result = await formRef.value?.validate();
+  const imagesUrl: string[] = [];
+  for (const i of images){
+    const url = await addPlaceStore.uploadImage(i);
+    imagesUrl.push(url);
 
+  }
   if (!result?.valid) return;
   if (!hasAtLeastOneTag.value) return;
+  if (imagesUrl.length == 0){
+    imagesUrl.push("https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80");
+  }
 
   await addPlaceStore.createPlace({
     name: name.value.trim(),
     location: location.value.trim(),
     description: description.value.trim(),
-    images: [imagePreviewUrl.value],
+    images: imagesUrl,
     tags: tags.value,
     firstReview: firstReview.value.trim(),
     firstReviewScore: reviewRating.value
@@ -378,10 +423,23 @@ async function handleSubmit() {
 }
 
 onBeforeUnmount(() => {
-  if (imagePreviewUrl.value.startsWith("blob:")) {
-    URL.revokeObjectURL(imagePreviewUrl.value);
+  for(const i of imagePreviewUrl.value){
+    if (i.startsWith("blob:")) {
+      URL.revokeObjectURL(i);
+    }
   }
+  
 });
+
+const nextImage = () => {
+  imageIndex.value = (imageIndex.value + 1) % imagePreviewUrl.value.length;
+};
+
+const previousImage = () => {
+  imageIndex.value =
+    (imageIndex.value - 1 + imagePreviewUrl.value.length) %
+    imagePreviewUrl.value.length;
+};
 </script>
 
 

@@ -112,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import type { Place } from "../types/data";
 import { useAuthStore } from "../stores/authStore";
@@ -128,7 +128,9 @@ const router = useRouter();
 const auth = useAuthStore();
 const savedPlacesStore = useSavedPlacesStore();
 const reviewsStore = useReviewsStore();
-
+onMounted(async () => {
+  await savedPlacesStore.getSavesDB();
+});
 const imageIndex = ref(0);
 const showReviews = ref(false);
 const expandedDescription = ref(false);

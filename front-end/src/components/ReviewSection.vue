@@ -54,6 +54,7 @@
 
             <v-rating
               :model-value="review.rating"
+              half-increments
               readonly
               density="compact"
               size="x-small"
@@ -75,18 +76,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/authStore";
 import { useReviewsStore } from "../stores/reviewsStore";
 
 const props = defineProps<{
-  placeId: number;
+  placeId: string;
 }>();
 
 const router = useRouter();
 const auth = useAuthStore();
 const reviewsStore = useReviewsStore();
+
+onMounted(async () => {
+  await reviewsStore.getReviewsDB();
+});
 
 const reviewText = ref("");
 const reviewRating = ref(4);
@@ -109,7 +114,6 @@ const submitReview = () => {
 
   reviewsStore.addReview({
     placeId: props.placeId,
-    user: auth.user.email ?? "You",
     rating: reviewRating.value,
     text: reviewText.value.trim(),
   });
@@ -118,7 +122,7 @@ const submitReview = () => {
   reviewRating.value = 4;
 };
 
-const formatReviewDate = (dateString: string) => {
+const formatReviewDate = (dateString: number) => {
   return new Date(dateString).toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",

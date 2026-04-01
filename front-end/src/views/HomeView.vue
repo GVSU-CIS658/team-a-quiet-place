@@ -1,54 +1,3 @@
-<script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import FilterFab from "../components/FilterFab.vue";
-import PlaceCard from "../components/PlaceCard.vue";
-import { usePlacesStore } from "../stores/placesStore";
-import { useAuthStore } from "../stores/authStore";
-const auth = useAuthStore();
-
-const slideDirection = ref("slide-left");
-const currentIndex = ref(0);
-const filterDialog = ref(false);
-
-const placesStore = usePlacesStore();
-
-const filteredPlaces = computed(() => placesStore.filteredPlaces);
-
-const currentPlace = computed(() => {
-  if (filteredPlaces.value.length === 0) return null;
-  return filteredPlaces.value[currentIndex.value] ?? null;
-});
-
-watch(
-  filteredPlaces,
-  (places) => {
-    if (places.length === 0) {
-      currentIndex.value = 0;
-      return;
-    }
-
-    if (currentIndex.value > places.length - 1) {
-      currentIndex.value = 0;
-    }
-  },
-  { immediate: true },
-);
-
-const nextPlace = () => {
-  if (filteredPlaces.value.length === 0) return;
-  slideDirection.value = "slide-left";
-  currentIndex.value = (currentIndex.value + 1) % filteredPlaces.value.length;
-};
-
-const previousPlace = () => {
-  if (filteredPlaces.value.length === 0) return;
-  slideDirection.value = "slide-right";
-  currentIndex.value =
-    (currentIndex.value - 1 + filteredPlaces.value.length) %
-    filteredPlaces.value.length;
-};
-</script>
-
 <template>
   <div class="home-page">
     <div v-if="currentPlace" class="card-stage">
@@ -118,6 +67,61 @@ const previousPlace = () => {
     </v-dialog>
 
 </template>
+
+<script setup lang="ts">
+import { computed, ref, watch, onMounted } from "vue";
+import FilterFab from "../components/FilterFab.vue";
+import PlaceCard from "../components/PlaceCard.vue";
+import { usePlacesStore } from "../stores/placesStore";
+import { useAuthStore } from "../stores/authStore";
+const auth = useAuthStore();
+
+const slideDirection = ref("slide-left");
+const currentIndex = ref(0);
+const filterDialog = ref(false);
+
+const placesStore = usePlacesStore();
+
+onMounted(async () => {
+  await placesStore.getPlacesDB();
+});
+
+const filteredPlaces = computed(() => placesStore.filteredPlaces);
+
+const currentPlace = computed(() => {
+  if (filteredPlaces.value.length === 0) return null;
+  return filteredPlaces.value[currentIndex.value] ?? null;
+});
+
+watch(
+  filteredPlaces,
+  (places) => {
+    if (places.length === 0) {
+      currentIndex.value = 0;
+      return;
+    }
+
+    if (currentIndex.value > places.length - 1) {
+      currentIndex.value = 0;
+    }
+  },
+  { immediate: true },
+);
+
+const nextPlace = () => {
+  if (filteredPlaces.value.length === 0) return;
+  slideDirection.value = "slide-left";
+  currentIndex.value = (currentIndex.value + 1) % filteredPlaces.value.length;
+};
+
+const previousPlace = () => {
+  if (filteredPlaces.value.length === 0) return;
+  slideDirection.value = "slide-right";
+  currentIndex.value =
+    (currentIndex.value - 1 + filteredPlaces.value.length) %
+    filteredPlaces.value.length;
+};
+</script>
 
 <style scoped>
 .home-page {

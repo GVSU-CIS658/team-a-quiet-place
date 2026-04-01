@@ -15,6 +15,7 @@ import {
 } from 'firebase/auth'
 import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 import { auth, db } from '../firebase/firebase'
+import { useSavedPlacesStore } from "./savedPlacesStore";
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
@@ -134,7 +135,11 @@ export const useAuthStore = defineStore('auth', () => {
 
 
   async function logout() {
-    await signOut(auth)
+    const savedPlacesStore = useSavedPlacesStore();
+
+    await signOut(auth);
+    savedPlacesStore.stopListener();
+    savedPlacesStore.clearSaved();
     showLogoutDialog.value = true;
 
   }

@@ -1,5 +1,9 @@
 import { defineStore } from "pinia";
-import type { Place, Review } from "../types/data";
+import type { Place, Review} from "../types/data";
+import { updateDoc, addDoc, collection } from "firebase/firestore";
+import { auth, db, store } from '../firebase/firebase'
+import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
+
 
 type CreatePlaceInput = {
   name: string;
@@ -7,12 +11,8 @@ type CreatePlaceInput = {
   description: string;
   images: string[];
   tags: string[];
-  firstReview?: string;
-};
-
-type CreatePlaceResult = {
-  place: Place;
-  firstReview: Review | null;
+  firstReview: string;
+  firstReviewScore: number;
 };
 
 export const useAddPlaceStore = defineStore("addPlace", {
@@ -22,39 +22,41 @@ export const useAddPlaceStore = defineStore("addPlace", {
   }),
 
   actions: {
-    async createPlace(input: CreatePlaceInput): Promise<CreatePlaceResult> {
-      this.isSubmitting = true;
+    async createPlace(input: CreatePlaceInput): Promise<Place> {
       this.error = null;
 
       try {
-        const placeId = Date.now();
-        const trimmedFirstReview = input.firstReview?.trim() ?? "";
-
-        const place: Place = {
-          id: placeId,
+        const payload: Place = {
+          id: Date.now().toString(),
           name: input.name.trim(),
           location: input.location.trim(),
           description: input.description.trim(),
-          rating: trimmedFirstReview ? 5 : 5,
-          reviews: trimmedFirstReview ? 1 : 0,
+          rating: 0,
+          reviews: 0,
           images: input.images,
           tags: input.tags,
         };
+        const docPla = await addDoc(collection(db, "places"), payload);
+        await updateDoc(docPla, { id: docPla.id });
+        if (input.firstReview != ''){
+          if(auth.currentUser?.displayName){
+            const review: Review = {
+              id: Date.now().toString(),
+              placeId: payload.id,
+              user: auth.currentUser.displayName,
+              rating: input.firstReviewScore,
+              text: input.firstReview.trim(),
+              createdAt: Date.now()
+            };
 
-        const firstReview: Review | null = trimmedFirstReview
-          ? {
-              id: placeId + 1,
-              placeId,
-              user: "You",
-              rating: 5,
-              text: trimmedFirstReview,
-              createdAt: new Date().toISOString(),
-            }
-          : null;
 
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        return { place, firstReview };
+            const docRev = await addDoc(collection(db, "reviews"), review);
+            await updateDoc(docRev, { id: docRev.id, placeId: docPla.id });
+            await updateDoc(docPla, { rating: input.firstReviewScore, reviews: 1 });
+            
+          }
+        }
+        return payload;
       } catch (error) {
         this.error = "Failed to create place.";
         throw error;
@@ -62,5 +64,13 @@ export const useAddPlaceStore = defineStore("addPlace", {
         this.isSubmitting = false;
       }
     },
+    async uploadImage(file:File): Promise<string>{
+      const storageRef = ref(store, `images/${Date.now()}-${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      return downloadURL;
+
+    }
   },
 });

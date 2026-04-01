@@ -1,147 +1,10 @@
-<script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from "vue";
-import { useRouter } from "vue-router";
-import { useAddPlaceStore } from "../stores/addPlaceStore";
-
-const router = useRouter();
-const addPlaceStore = useAddPlaceStore();
-
-const formRef = ref();
-
-const name = ref("New Quiet Place");
-const location = ref("Campus location");
-const description = ref(
-  "Describe what makes this place calm, comfortable, or good for studying.",
-);
-const firstReview = ref("");
-
-const tags = ref<string[]>(["quiet"]);
-const tagInput = ref("");
-
-const imagePreviewUrl = ref(
-  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
-);
-
-const editingField = ref<"name" | "location" | "description" | "review" | null>(
-  null,
-);
-
-const fileInputRef = ref<HTMLInputElement | null>(null);
-
-const defaultName = "New Quiet Place";
-const defaultLocation = "Campus location";
-const defaultDescription =
-  "Describe what makes this place calm, comfortable, or good for studying.";
-
-const rules = {
-  required: (value: string) => !!value?.trim() || "This field is required.",
-  minName: (value: string) =>
-    value.trim().length >= 3 || "Name must be at least 3 characters.",
-  minLocation: (value: string) =>
-    value.trim().length >= 3 || "Location must be at least 3 characters.",
-  minDescription: (value: string) =>
-    value.trim().length >= 15 || "Description must be at least 15 characters.",
-  maxDescription: (value: string) =>
-    value.trim().length <= 500 || "Description cannot exceed 500 characters.",
-  maxReview: (value: string) =>
-    value.trim().length <= 300 || "Review cannot exceed 300 characters.",
-};
-
-const isNameValid = computed(() => name.value.trim().length >= 3);
-const isLocationValid = computed(() => location.value.trim().length >= 3);
-const isDescriptionValid = computed(() => {
-  const len = description.value.trim().length;
-  return len >= 15 && len <= 500;
-});
-const isReviewValid = computed(() => firstReview.value.trim().length <= 300);
-const hasAtLeastOneTag = computed(() => tags.value.length > 0);
-
-const canSubmit = computed(() => {
-  return (
-    isNameValid.value &&
-    isLocationValid.value &&
-    isDescriptionValid.value &&
-    isReviewValid.value &&
-    hasAtLeastOneTag.value &&
-    !addPlaceStore.isSubmitting
-  );
-});
-
-function startEditing(field: "name" | "location" | "description" | "review") {
-  editingField.value = field;
-}
-
-function stopEditing() {
-  editingField.value = null;
-
-  if (!name.value.trim()) name.value = defaultName;
-  if (!location.value.trim()) location.value = defaultLocation;
-  if (!description.value.trim()) description.value = defaultDescription;
-}
-
-function triggerImageUpload() {
-  fileInputRef.value?.click();
-}
-
-function handleImageSelected(event: Event) {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
-  if (!file) return;
-
-  if (imagePreviewUrl.value.startsWith("blob:")) {
-    URL.revokeObjectURL(imagePreviewUrl.value);
-  }
-
-  imagePreviewUrl.value = URL.createObjectURL(file);
-}
-
-function addTag() {
-  const value = tagInput.value.trim().toLowerCase();
-  if (!value) return;
-
-  if (!tags.value.includes(value)) {
-    tags.value.push(value);
-  }
-
-  tagInput.value = "";
-}
-
-function removeTag(tag: string) {
-  tags.value = tags.value.filter((t) => t !== tag);
-}
-
-async function handleSubmit() {
-  const result = await formRef.value?.validate();
-
-  if (!result?.valid) return;
-  if (!hasAtLeastOneTag.value) return;
-
-  await addPlaceStore.createPlace({
-    name: name.value.trim(),
-    location: location.value.trim(),
-    description: description.value.trim(),
-    images: [imagePreviewUrl.value],
-    tags: tags.value,
-    firstReview: firstReview.value.trim(),
-  });
-
-  router.push({ name: "home" });
-}
-
-onBeforeUnmount(() => {
-  if (imagePreviewUrl.value.startsWith("blob:")) {
-    URL.revokeObjectURL(imagePreviewUrl.value);
-  }
-});
-</script>
-
 <template>
   <div class="add-place-page">
     <div class="editor-shell">
       <v-form ref="formRef" @submit.prevent="handleSubmit">
         <v-card class="place-card" rounded="xl" elevation="4">
           <div class="image-wrapper">
-            <v-img :src="imagePreviewUrl" height="430" cover>
+            <v-img :src="imagePreviewUrl[imageIndex]" height="430" cover>
               <div class="image-overlay">
                 <div class="top-image-row">
                   <template v-if="editingField === 'location'">
@@ -170,13 +33,22 @@ onBeforeUnmount(() => {
 
                   <div class="image-counter-wrap">
                     <v-btn
+                      icon="mdi-trash-can"
+                      size="small"
+                      variant="flat"
+                      class="delete-btn"
+                      @click="deleteImage"
+                    />
+
+                    <v-btn
                       icon="mdi-camera-plus-outline"
                       size="small"
                       variant="flat"
                       class="upload-btn"
                       @click="triggerImageUpload"
                     />
-                    <div class="image-counter">1 / 1</div>
+
+                    <div class="image-counter">{{ imageIndex + 1 }} / {{ imagePreviewUrl.length }}</div>
                   </div>
                 </div>
 
@@ -186,14 +58,14 @@ onBeforeUnmount(() => {
                     size="small"
                     variant="flat"
                     class="nav-btn"
-                    disabled
+                    @click.stop="previousImage"
                   />
                   <v-btn
                     icon="mdi-chevron-right"
                     size="small"
                     variant="flat"
                     class="nav-btn"
-                    disabled
+                    @click.stop="nextImage"
                   />
                 </div>
               </div>
@@ -267,38 +139,19 @@ onBeforeUnmount(() => {
               </template>
             </div>
 
-            <div class="rating-row">
-              <div class="d-flex align-center ga-2">
-                <v-rating
-                  :model-value="5"
-                  half-increments
-                  readonly
-                  density="compact"
-                  color="primary"
-                  size="small"
-                />
-                <span class="text-body-2 font-weight-medium">5.0</span>
-                <span class="text-body-2 text-medium-emphasis">
-                  (0 reviews)
-                </span>
-              </div>
-            </div>
-
-            <div class="tags-section">
-              <div class="chips-row">
-                <v-chip
-                  v-for="tag in tags"
-                  :key="tag"
-                  size="small"
-                  variant="tonal"
-                  color="primary"
-                  rounded="lg"
-                  closable
-                  @click:close="removeTag(tag)"
-                >
-                  {{ tag }}
-                </v-chip>
-              </div>
+            <div class="d-flex flex-wrap ga-2 mb-1">
+              <v-chip
+                v-for="tag in tags"
+                :key="tag"
+                size="small"
+                variant="tonal"
+                color="primary"
+                rounded="lg"
+                closable
+                @click:close="removeTag(tag)"
+              >
+                {{ tag }}
+              </v-chip>
 
               <div class="tag-input-wrap">
                 <v-text-field
@@ -323,7 +176,23 @@ onBeforeUnmount(() => {
               </v-btn>
             </div>
 
-            <div class="first-review-box">
+            <div class="d-flex align-center ga-3 mb-4 flex-wrap">
+              <div class="d-flex align-center ga-2">
+                <v-rating
+                  v-model="reviewRating"
+                  half-increments
+                  density="compact"
+                  color="primary"
+                  size="small"
+                />
+                <span class="text-body-2 font-weight-medium">{{ reviewRating }}</span>
+                <span class="text-body-2 text-medium-emphasis">
+                  (0 reviews)
+                </span>
+              </div>
+            </div>
+
+            <div class="first-review-box mb-3">
               <template v-if="editingField === 'review'">
                 <v-textarea
                   v-model="firstReview"
@@ -376,6 +245,196 @@ onBeforeUnmount(() => {
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { computed, onBeforeUnmount, ref } from "vue";
+import { useRouter } from "vue-router";
+import { useAddPlaceStore } from "../stores/addPlaceStore";
+
+const router = useRouter();
+const addPlaceStore = useAddPlaceStore();
+
+const formRef = ref();
+
+const name = ref("New Quiet Place");
+const location = ref("Campus location");
+const description = ref(
+  "Describe what makes this place calm, comfortable, or good for studying.",
+);
+const reviewRating = ref(5)
+const firstReview = ref("");
+
+const tags = ref<string[]>(["quiet"]);
+const tagInput = ref("");
+
+const imagePreviewUrl = ref(
+  ["https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80"],
+);
+const images = [] as File[];
+const imageIndex = ref(0);
+const editingField = ref<"name" | "location" | "description" | "review" | null>(
+  null,
+);
+
+const fileInputRef = ref<HTMLInputElement | null>(null);
+
+const defaultName = "New Quiet Place";
+const defaultLocation = "Campus location";
+const defaultDescription =
+  "Describe what makes this place calm, comfortable, or good for studying.";
+
+const rules = {
+  required: (value: string) => !!value?.trim() || "This field is required.",
+  minName: (value: string) =>
+    value.trim().length >= 3 || "Name must be at least 3 characters.",
+  minLocation: (value: string) =>
+    value.trim().length >= 3 || "Location must be at least 3 characters.",
+  minDescription: (value: string) =>
+    value.trim().length >= 15 || "Description must be at least 15 characters.",
+  maxDescription: (value: string) =>
+    value.trim().length <= 500 || "Description cannot exceed 500 characters.",
+  maxReview: (value: string) =>
+    value.trim().length <= 300 || "Review cannot exceed 300 characters.",
+};
+
+const isNameValid = computed(() => name.value.trim().length >= 3);
+const isLocationValid = computed(() => location.value.trim().length >= 3);
+const isDescriptionValid = computed(() => {
+  const len = description.value.trim().length;
+  return len >= 15 && len <= 500;
+});
+const isReviewValid = computed(() => firstReview.value.trim().length <= 300);
+const hasAtLeastOneTag = computed(() => tags.value.length > 0);
+
+const canSubmit = computed(() => {
+  return (
+    isNameValid.value &&
+    isLocationValid.value &&
+    isDescriptionValid.value &&
+    isReviewValid.value &&
+    hasAtLeastOneTag.value &&
+    !addPlaceStore.isSubmitting
+  );
+});
+
+function startEditing(field: "name" | "location" | "description" | "review") {
+  editingField.value = field;
+}
+
+function stopEditing() {
+  editingField.value = null;
+
+  if (!name.value.trim()) name.value = defaultName;
+  if (!location.value.trim()) location.value = defaultLocation;
+  if (!description.value.trim()) description.value = defaultDescription;
+}
+
+function triggerImageUpload() {
+  fileInputRef.value?.click();
+}
+
+function deleteImage() {
+  imagePreviewUrl.value.splice(imageIndex.value, 1);
+  if (imagePreviewUrl.value.length == 0){
+    imagePreviewUrl.value.push("https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80");
+  }
+
+  if (images.length != 0){
+    images.splice(imageIndex.value, 1);
+  }
+  if (imageIndex.value >= imagePreviewUrl.value.length){
+    imageIndex.value--;
+  }
+}
+
+async function handleImageSelected(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+
+  if (imagePreviewUrl.value[0]){
+    if (imagePreviewUrl.value.length === 1 && !imagePreviewUrl.value[0].startsWith("blob:")) {
+      imagePreviewUrl.value = [];
+    }
+  }
+  const isDuplicate = images.some(f =>
+    f.name === file.name &&
+    f.size === file.size &&
+    f.lastModified === file.lastModified
+  );
+
+
+  if (!isDuplicate){
+    imagePreviewUrl.value.push(URL.createObjectURL(file));
+    images.push(file)
+  }
+  
+  target.value = "";
+}
+
+function addTag() {
+  const value = tagInput.value.trim().toLowerCase();
+  if (!value) return;
+
+  if (!tags.value.includes(value)) {
+    tags.value.push(value);
+  }
+
+  tagInput.value = "";
+}
+
+function removeTag(tag: string) {
+  tags.value = tags.value.filter((t) => t !== tag);
+}
+
+async function handleSubmit() {
+  addPlaceStore.isSubmitting = true;
+  const result = await formRef.value?.validate();
+  const imagesUrl: string[] = [];
+  for (const i of images){
+    const url = await addPlaceStore.uploadImage(i);
+    imagesUrl.push(url);
+
+  }
+  if (!result?.valid) return;
+  if (!hasAtLeastOneTag.value) return;
+  if (imagesUrl.length == 0){
+    imagesUrl.push("https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80");
+  }
+
+  await addPlaceStore.createPlace({
+    name: name.value.trim(),
+    location: location.value.trim(),
+    description: description.value.trim(),
+    images: imagesUrl,
+    tags: tags.value,
+    firstReview: firstReview.value.trim(),
+    firstReviewScore: reviewRating.value
+  });
+
+  router.push({ name: "home" });
+}
+
+onBeforeUnmount(() => {
+  for(const i of imagePreviewUrl.value){
+    if (i.startsWith("blob:")) {
+      URL.revokeObjectURL(i);
+    }
+  }
+  
+});
+
+const nextImage = () => {
+  imageIndex.value = (imageIndex.value + 1) % imagePreviewUrl.value.length;
+};
+
+const previousImage = () => {
+  imageIndex.value =
+    (imageIndex.value - 1 + imagePreviewUrl.value.length) %
+    imagePreviewUrl.value.length;
+};
+</script>
+
 
 <style scoped>
 .add-place-page {

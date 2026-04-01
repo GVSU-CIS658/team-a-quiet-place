@@ -1,14 +1,14 @@
 export type Review = {
-  id: number;
-  placeId: number;
+  id: string;
+  placeId: string;
   user: string;
   rating: number;
   text: string;
-  createdAt: string;
+  createdAt: number;
 };
 
 export type Place = {
-  id: number;
+  id: string;
   name: string;
   location: string;
   description: string;
@@ -16,4 +16,11 @@ export type Place = {
   reviews: number;
   images: string[];
   tags: string[];
+};
+
+export type Saves = {
+  id: string;
+  placeId: string;
+  savedAt: number;
+  user: string;
 };

@@ -1,10 +1,14 @@
 import { defineStore } from "pinia";
 import type { Place } from "../types/data";
-import mockPlaces from "../mockdata/mockPlaces.json";
+import { onSnapshot, collection} from "firebase/firestore";
+import { db } from '../firebase/firebase'
+
+let unsubscribe: (() => void) | null = null;
 
 export const usePlacesStore = defineStore("places", {
   state: () => ({
-    places: mockPlaces as Place[],
+    places: [] as Place[],
+    
 
     filters: {
       location: "",
@@ -45,6 +49,32 @@ export const usePlacesStore = defineStore("places", {
 
     setPlaces(places: Place[]) {
       this.places = places;
+    },
+
+    async getPlacesDB(){
+      try {
+        if (unsubscribe) return;
+
+        unsubscribe = onSnapshot(collection(db, "places"), (snapshot) => {
+          this.places = snapshot.docs.map((doc) => {
+            const data = doc.data();
+
+            const placedb: Place = {
+              id: data.id,
+              name: data.name,
+              location: data.location,
+              description: data.description,
+              rating: data.rating,
+              reviews: data.reviews,
+              images: data.images,
+              tags: data.tags,
+            };
+            return placedb;
+          });
+        });
+      }catch(error) {
+        console.error('Error fetching data: ', error);
+      }
     },
   },
 });

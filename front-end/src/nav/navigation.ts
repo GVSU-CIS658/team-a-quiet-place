@@ -3,9 +3,6 @@ import MainLayout from "../views/MainLayout.vue";
 import HomeView from "../views/HomeView.vue";
 import SavedView from "../views/SavedView.vue";
 import AddPlaceView from "../views/AddPlaceView.vue";
-import LoginView from "../views/LoginView.vue";
-import SignupView from "../views/SignupView.vue";
-import AccountPageView from "../views/AccountPageView.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -32,23 +29,7 @@ const router = createRouter({
           component: AddPlaceView,
           meta: { subtitle: "Share a new quiet place" },
         },
-        {
-          path: "account-page",
-          name: "account-page",
-          component: AccountPageView,
-          meta: { subtitle: "Edit your Account" },
-        },
       ],
-    },
-    {
-      path: "/login",
-      name: "login",
-      component: LoginView,
-    },
-    {
-      path: "/signup",
-      name: "signup",
-      component: SignupView,
     },
   ],
 });

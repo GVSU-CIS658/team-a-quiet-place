@@ -1,7 +1,8 @@
 import { defineStore } from "pinia";
 import type { Review } from "../types/data";
 import { doc, getDoc, onSnapshot, collection, updateDoc, addDoc, deleteDoc} from "firebase/firestore";
-import { auth, db } from '../firebase/firebase'
+import { auth, db, functions } from '../firebase/firebase'
+import { httpsCallable } from "firebase/functions";
 
 let unsubscribe: (() => void) | null = null;
 
@@ -67,24 +68,8 @@ export const useReviewsStore = defineStore("reviews", {
               createdAt: Date.now()
             };
 
-
-            const docRev = await addDoc(collection(db, "reviews"), review);
-            await updateDoc(docRev, { id: docRev.id });
-            
-            const placeRef = doc(db, "places", newReview.placeId);
-            const placeDoc = await getDoc(placeRef);
-            
-            if(placeDoc.exists()){
-              const placeData = placeDoc.data();
-
-              const prevRev = placeData.reviews ?? 0;
-              const prevRat = placeData.rating ?? 0;
-
-              const newRev = prevRev + 1;
-              const newRat = (prevRat * prevRev + newReview.rating) / newRev;
-              await updateDoc(placeRef, {reviews: newRev, rating: newRat});
-            }
-            
+             const addReview = httpsCallable(functions, "addReview");
+             await addReview(review);
           }
         }
       } catch (error) {

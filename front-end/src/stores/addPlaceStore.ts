@@ -1,8 +1,8 @@
 import { defineStore } from "pinia";
 import type { Place, Review} from "../types/data";
-import { updateDoc, addDoc, collection } from "firebase/firestore";
-import { auth, db, store } from '../firebase/firebase'
+import { auth, store, functions } from '../firebase/firebase'
 import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
+import { httpsCallable } from "firebase/functions";
 
 
 type CreatePlaceInput = {
@@ -36,13 +36,14 @@ export const useAddPlaceStore = defineStore("addPlace", {
           images: input.images,
           tags: input.tags,
         };
-        const docPla = await addDoc(collection(db, "places"), payload);
-        await updateDoc(docPla, { id: docPla.id });
+        const addPlace = httpsCallable(functions, "addPlace");
+        const placeid = await addPlace(payload);
+
         if (input.firstReview != ''){
           if(auth.currentUser?.displayName){
             const review: Review = {
               id: Date.now().toString(),
-              placeId: payload.id,
+              placeId: placeid.data as string,
               user: auth.currentUser.displayName,
               rating: input.firstReviewScore,
               text: input.firstReview.trim(),
@@ -50,10 +51,8 @@ export const useAddPlaceStore = defineStore("addPlace", {
             };
 
 
-            const docRev = await addDoc(collection(db, "reviews"), review);
-            await updateDoc(docRev, { id: docRev.id, placeId: docPla.id });
-            await updateDoc(docPla, { rating: input.firstReviewScore, reviews: 1 });
-            
+             const addReview = httpsCallable(functions, "addReview");
+             await addReview(review);
           }
         }
         return payload;

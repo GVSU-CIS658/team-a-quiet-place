@@ -10,7 +10,7 @@ export type Review = {
 export type Place = {
   id: string;
   name: string;
-  location: string;
+  location: LocationType;
   description: string;
   rating: number;
   reviews: number;
@@ -24,3 +24,6 @@ export type Saves = {
   savedAt: number;
   user: string;
 };
+
+
+export type LocationType = "Valley" | "Pew" | "Health";

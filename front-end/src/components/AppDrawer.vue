@@ -1,4 +1,4 @@
-<template>
+ <template>
   <v-navigation-drawer
     :model-value="modelValue"
     temporary
@@ -44,21 +44,13 @@
             class="drawer-item"
             @click="goTo('add-place')"
           />
-
-          <v-list-item
-            v-if="isLoggedIn"
-            prepend-icon="mdi-account-box-edit-outline"
-            title="Account"
-            rounded="xl"
-            class="drawer-item"
-            @click="goTo('account-page')"
-          />
         </v-list>
       </div>
 
       <div class="drawer-footer">
         <v-divider class="mb-4" />
 
+        <!-- ✅ LOGOUT -->
         <v-btn
           v-if="isLoggedIn"
           block
@@ -72,16 +64,17 @@
           Log out
         </v-btn>
 
+        <!-- ✅ LOGIN -->
         <v-btn
           v-else
           block
           color="primary"
           rounded="xl"
-          prepend-icon="mdi-login"
+          prepend-icon="mdi-google"
           class="drawer-action-btn"
-          @click="goTo('login')"
+          @click="handleLogin"
         >
-          Sign In
+          Sign in with Google
         </v-btn>
       </div>
     </div>
@@ -115,16 +108,19 @@ function goTo(name: string) {
   router.push({ name });
 }
 
-async function handleLogout() {
-  try {
+const handleLogin = () => {
+  auth.signInWithGoogle()
+    .then(() => {
+      console.log("Logged in");
+    });
+};
 
-    await auth.logout();
-    closeDrawer();
-    router.push({ name: "home" });
-  } catch (error) {
-    console.error("Logout failed:", error);
-  }
-}
+const handleLogout = () => {
+  auth.logout()
+    .then(() => {
+      console.log("Logged out");
+    });
+};
 </script>
 
 <style scoped>

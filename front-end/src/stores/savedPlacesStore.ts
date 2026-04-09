@@ -1,19 +1,33 @@
 import { defineStore } from "pinia";
 import { usePlacesStore } from "./placesStore";
-import type { Place, Saves } from "../types/data";
-import {collection, updateDoc, addDoc, onSnapshot, doc, getDocs, deleteDoc, query, where} from "firebase/firestore";
-import { auth, db } from '../firebase/firebase'
+import { useReviewsStore } from "./reviewsStore";
+import type { Place, Saves, LocationType  } from "../types/data";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  getDocs,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  where,
+} from "firebase/firestore";
+import { auth, db } from "../firebase/firebase";
 
-let unsubscribe: (() => void) | null = null;
+type Filters = {
+  location: LocationType | null;
+  rating: number | null;
+};
 
 export const useSavedPlacesStore = defineStore("savedPlaces", {
   state: () => ({
     saved: [] as Saves[],
+    unsubscribe: null as (() => void) | null,
     isSubmitting: false,
     error: null as string | null,
 
     filters: {
-      location: "",
+      location: null as LocationType | null,
       rating: null as number | null,
     },
   }),
@@ -23,12 +37,18 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
       const placesStore = usePlacesStore();
 
       return state.saved
-        .map((entry) => placesStore.places.find((p) => p.id === entry.placeId))
-        .filter((p): p is Place => Boolean(p));
+        .map((entry) =>
+          placesStore.places.find((place) => place.id === entry.placeId),
+        )
+        .filter((place): place is Place => Boolean(place));
     },
 
     filteredSavedPlaces(): Place[] {
+      const reviewsStore = useReviewsStore();
+
       return this.savedPlaces.filter((place) => {
+        const averageRating = reviewsStore.getAverageRatingForPlace(place.id);
+
         const locationMatch =
           !this.filters.location ||
           place.location
@@ -36,36 +56,41 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
             .includes(this.filters.location.toLowerCase());
 
         const ratingMatch =
-          this.filters.rating === null || place.rating >= this.filters.rating;
+          this.filters.rating === null ||
+          averageRating >= this.filters.rating;
 
         return locationMatch && ratingMatch;
       });
     },
 
     isSaved: (state) => {
-      return (placeId: string) =>
-        state.saved.some((p) => p.placeId === placeId);
+      return (placeId: string): boolean => {
+        return state.saved.some((entry) => entry.placeId === placeId);
+      };
     },
   },
 
   actions: {
-    async savePlace(placeId: string) {
+    async savePlace(placeId: string): Promise<void> {
       this.isSubmitting = true;
       this.error = null;
+
       try {
-        if(auth.currentUser?.uid){
-          const saves: Saves = {
-            id: Date.now().toString(),
-            placeId: placeId,
-            user: auth.currentUser.uid,
-            savedAt: Date.now()
-          };
+        const user = auth.currentUser?.uid;
+        if (!user) return;
 
+        const alreadySaved = this.saved.some(
+          (entry) => entry.placeId === placeId,
+        );
+        if (alreadySaved) return;
 
-          const docSav = await addDoc(collection(db, "saves"), saves);
-          await updateDoc(docSav, { id: docSav.id });
-        }
+        await addDoc(collection(db, "saves"), {
+          placeId,
+          user,
+          savedAt: serverTimestamp(),
+        });
       } catch (error) {
+        console.error("Failed to create save:", error);
         this.error = "Failed to create save.";
         throw error;
       } finally {
@@ -73,24 +98,27 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
       }
     },
 
-    async removePlace(placeId: string) {
+    async removePlace(placeId: string): Promise<void> {
+      this.isSubmitting = true;
+      this.error = null;
+
       try {
-        if(auth.currentUser?.uid){
-          const uid = auth.currentUser.uid;
+        const user = auth.currentUser?.uid;
+        if (!user) return;
 
-          const saveRef = query(
-            collection(db, "saves"),
-            where("placeId", "==", placeId),
-            where("user", "==", uid)
-          );
-          const saveDoc = await getDocs(saveRef);
-        
+        const savesQuery = query(
+          collection(db, "saves"),
+          where("placeId", "==", placeId),
+          where("user", "==", user),
+        );
 
-          saveDoc.forEach(async (save) => {
-            await deleteDoc(doc(db, "saves", save.id));
-          });
-        }
-      }catch (error) {
+        const snapshot = await getDocs(savesQuery);
+
+        await Promise.all(
+          snapshot.docs.map((docSnap) => deleteDoc(docSnap.ref)),
+        );
+      } catch (error) {
+        console.error("Failed to delete save:", error);
         this.error = "Failed to delete save.";
         throw error;
       } finally {
@@ -98,57 +126,65 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
       }
     },
 
-    resetFilters() {
-      this.filters.location = "";
-      this.filters.rating = null;
+    updateFilters(partial: Partial<Filters>) {
+      this.filters = {
+        ...this.filters,
+        ...partial,
+      };
     },
 
-    setLocationFilter(location: string) {
-      this.filters.location = location;
+    resetFilters() {
+      this.filters = {
+        location: null,
+        rating: null,
+      };
     },
 
     setRatingFilter(rating: number | null) {
       this.filters.rating = rating;
     },
 
-    async getSavesDB(){
-      try {
-        if (unsubscribe) return;
-        if (!auth.currentUser?.uid) return;
+    readSaves() {
+      if (this.unsubscribe) return;
 
-        const uid = auth.currentUser.uid;
+      const user = auth.currentUser?.uid;
+      if (!user) return;
 
-        const userSaves = query(
-          collection(db, "saves"),
-          where("user", "==", uid)
-        );
+      const userSavesQuery = query(
+        collection(db, "saves"),
+        where("user", "==", user),
+      );
 
-        unsubscribe = onSnapshot(userSaves, (snapshot) => {
-          this.saved = snapshot.docs.map((doc) => {
-            const data = doc.data();
+      this.unsubscribe = onSnapshot(
+        userSavesQuery,
+        (snapshot) => {
+          this.saved = snapshot.docs.map((docSnap) => {
+            const data = docSnap.data();
 
-            const savedb: Saves = {
-              id: data.id,
+            return {
+              id: docSnap.id,
               placeId: data.placeId,
               user: data.user,
-              savedAt: data.savedAt,
-            };
-            return savedb;
+              savedAt: data.savedAt?.toMillis?.() ?? 0,
+            } as Saves;
           });
-        });
-      }catch(error) {
-        console.error('Error fetching data: ', error);
-      }
+        },
+        (error) => {
+          console.error("Error reading saves:", error);
+          this.error = "Failed to read saves.";
+        },
+      );
     },
-    stopListener() {
-      if (unsubscribe) {
-        unsubscribe();
-        unsubscribe = null;
+
+    stopReading() {
+      if (this.unsubscribe) {
+        this.unsubscribe();
+        this.unsubscribe = null;
       }
     },
 
     clearSaved() {
       this.saved = [];
-    }
+    },
   },
 });

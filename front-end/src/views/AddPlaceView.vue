@@ -4,72 +4,61 @@
       <v-form ref="formRef" @submit.prevent="handleSubmit">
         <v-card class="place-card" rounded="xl" elevation="4">
           <div class="image-wrapper">
-            <v-img :src="imagePreviewUrl[imageIndex]" height="430" cover>
-              <div class="image-overlay">
-                <div class="top-image-row">
-                  <template v-if="editingField === 'location'">
-                    <div class="location-edit-wrap">
-                      <v-text-field
+            <v-carousel
+              v-model="imageIndex"
+              height="430"
+              hide-delimiter-background
+              :show-arrows="displayedImages.length > 1 ? 'hover' : false"
+              class="place-carousel"
+            >
+              <v-carousel-item
+                v-for="(image, index) in displayedImages"
+                :key="`${image}-${index}`"
+                :src="image"
+                cover
+              >
+                <div class="image-overlay">
+                  <div class="top-image-row">
+                    <div class="location-select-wrap">
+                      <v-select
                         v-model="location"
-                        variant="solo-filled"
+                        :items="locationOptions"
+                        variant="solo"
                         density="compact"
-                        hide-details="auto"
-                        autofocus
-                        :rules="[rules.required, rules.minLocation]"
-                        @blur="stopEditing"
-                        @keydown.enter.prevent="stopEditing"
+                        hide-details
+                        flat
+                        rounded="pill"
+                        bg-color="rgba(255, 255, 255, 0.92)"
+                        class="location-pill-select"
                       />
                     </div>
-                  </template>
 
-                  <template v-else>
-                    <div
-                      class="location-pill editable-hover"
-                      @click="startEditing('location')"
-                    >
-                      {{ location }}
+                    <div class="image-counter-wrap">
+                      <v-btn
+                        icon="mdi-trash-can"
+                        size="small"
+                        variant="flat"
+                        class="delete-btn"
+                        :disabled="!hasUploadedImages"
+                        @click="deleteImage"
+                      />
+
+                      <v-btn
+                        icon="mdi-camera-plus-outline"
+                        size="small"
+                        variant="flat"
+                        class="upload-btn"
+                        @click="triggerImageUpload"
+                      />
+
+                      <div class="image-counter">
+                        {{ imageIndex + 1 }} / {{ displayedImages.length }}
+                      </div>
                     </div>
-                  </template>
-
-                  <div class="image-counter-wrap">
-                    <v-btn
-                      icon="mdi-trash-can"
-                      size="small"
-                      variant="flat"
-                      class="delete-btn"
-                      @click="deleteImage"
-                    />
-
-                    <v-btn
-                      icon="mdi-camera-plus-outline"
-                      size="small"
-                      variant="flat"
-                      class="upload-btn"
-                      @click="triggerImageUpload"
-                    />
-
-                    <div class="image-counter">{{ imageIndex + 1 }} / {{ imagePreviewUrl.length }}</div>
                   </div>
                 </div>
-
-                <div class="image-nav">
-                  <v-btn
-                    icon="mdi-chevron-left"
-                    size="small"
-                    variant="flat"
-                    class="nav-btn"
-                    @click.stop="previousImage"
-                  />
-                  <v-btn
-                    icon="mdi-chevron-right"
-                    size="small"
-                    variant="flat"
-                    class="nav-btn"
-                    @click.stop="nextImage"
-                  />
-                </div>
-              </div>
-            </v-img>
+              </v-carousel-item>
+            </v-carousel>
 
             <input
               ref="fileInputRef"
@@ -107,7 +96,12 @@
                 </template>
               </div>
 
-              <v-btn icon="mdi-heart" variant="text" color="primary" />
+              <v-btn
+                :icon="heartIcon"
+                variant="text"
+                color="primary"
+                disabled
+              />
             </div>
 
             <div class="description-block">
@@ -170,56 +164,36 @@
               </div>
             </div>
 
-            <div class="review-toggle-row">
-              <v-btn variant="tonal" color="primary" rounded="xl" disabled>
-                Add a review
-              </v-btn>
-            </div>
+            <v-card variant="outlined" rounded="lg" class="first-review-card">
+              <v-card-text class="pa-4">
+                <div class="text-subtitle-2 font-weight-medium mb-3">
+                  Add the first review (optional)
+                </div>
 
-            <div class="d-flex align-center ga-3 mb-4 flex-wrap">
-              <div class="d-flex align-center ga-2">
-                <v-rating
-                  v-model="reviewRating"
-                  half-increments
-                  density="compact"
-                  color="primary"
-                  size="small"
-                />
-                <span class="text-body-2 font-weight-medium">{{ reviewRating }}</span>
-                <span class="text-body-2 text-medium-emphasis">
-                  (0 reviews)
-                </span>
-              </div>
-            </div>
+                <div class="mb-3">
+                  <v-rating
+                    v-model="firstReviewRating"
+                    half-increments
+                    color="primary"
+                    density="compact"
+                  />
+                </div>
 
-            <div class="first-review-box mb-3">
-              <template v-if="editingField === 'review'">
                 <v-textarea
-                  v-model="firstReview"
+                  v-model="firstReviewText"
+                  label="Share how this place feels"
                   variant="outlined"
                   rounded="lg"
                   rows="3"
                   auto-grow
                   hide-details="auto"
-                  autofocus
-                  placeholder="Write the first review for this place..."
-                  :rules="[rules.maxReview]"
-                  @blur="stopEditing"
+                  :rules="[
+                    firstReviewRules.optionalMinReview,
+                    firstReviewRules.maxReview,
+                  ]"
                 />
-              </template>
-
-              <template v-else>
-                <div
-                  class="first-review-placeholder editable-hover"
-                  @click="startEditing('review')"
-                >
-                  {{
-                    firstReview ||
-                    "Click here to add the first review for this place."
-                  }}
-                </div>
-              </template>
-            </div>
+              </v-card-text>
+            </v-card>
           </v-card-text>
         </v-card>
 
@@ -235,12 +209,11 @@
             icon="mdi-check"
             variant="flat"
             color="primary"
-            :loading="addPlaceStore.isSubmitting"
+            :loading="isSubmitting"
             :disabled="!canSubmit"
             @click="handleSubmit"
           />
         </div>
-
       </v-form>
     </div>
   </div>
@@ -249,75 +222,92 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from "vue";
 import { useRouter } from "vue-router";
-import { useAddPlaceStore } from "../stores/addPlaceStore";
+import { usePlacesStore } from "../stores/placesStore";
+import { useReviewsStore } from "../stores/reviewsStore";
+import { useAuthStore } from "../stores/authStore";
+import { useSavedPlacesStore } from "../stores/savedPlacesStore";
+import type { Place, LocationType } from "../types/data";
+
+type EditableField = "name" | "description" | null;
+type PlaceFormPayload = Pick<
+  Place,
+  "name" | "location" | "description" | "images" | "tags"
+>;
 
 const router = useRouter();
-const addPlaceStore = useAddPlaceStore();
+const placesStore = usePlacesStore();
+const reviewsStore = useReviewsStore();
+const savedPlacesStore = useSavedPlacesStore();
+const auth = useAuthStore();
 
 const formRef = ref();
 
-const name = ref("New Quiet Place");
-const location = ref("Campus location");
-const description = ref(
-  "Describe what makes this place calm, comfortable, or good for studying.",
-);
-const reviewRating = ref(5)
-const firstReview = ref("");
+const DEFAULT_IMAGE =
+  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80";
+
+const defaultName = "New Quiet Place";
+const defaultDescription =
+  "Describe what makes this place calm, comfortable, or good for studying.";
+
+const locationOptions: LocationType[] = ["Valley", "Pew", "Health"];
+
+const name = ref(defaultName);
+const location = ref<LocationType>("Valley");
+const description = ref(defaultDescription);
 
 const tags = ref<string[]>(["quiet"]);
 const tagInput = ref("");
 
-const imagePreviewUrl = ref(
-  ["https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80"],
-);
-const images = [] as File[];
-const imageIndex = ref(0);
-const editingField = ref<"name" | "location" | "description" | "review" | null>(
-  null,
-);
+const firstReviewText = ref("");
+const firstReviewRating = ref(4);
 
+const imageFiles = ref<File[]>([]);
+const imagePreviewUrls = ref<string[]>([]);
+const imageIndex = ref(0);
+
+const editingField = ref<EditableField>(null);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 
-const defaultName = "New Quiet Place";
-const defaultLocation = "Campus location";
-const defaultDescription =
-  "Describe what makes this place calm, comfortable, or good for studying.";
+const wasCreatedAndSaved = ref(false);
 
 const rules = {
   required: (value: string) => !!value?.trim() || "This field is required.",
   minName: (value: string) =>
     value.trim().length >= 3 || "Name must be at least 3 characters.",
-  minLocation: (value: string) =>
-    value.trim().length >= 3 || "Location must be at least 3 characters.",
   minDescription: (value: string) =>
     value.trim().length >= 15 || "Description must be at least 15 characters.",
   maxDescription: (value: string) =>
     value.trim().length <= 500 || "Description cannot exceed 500 characters.",
+};
+
+const firstReviewRules = {
+  optionalMinReview: (value: string) =>
+    !value.trim() || value.trim().length >= 8 || "Review must be at least 8 characters.",
   maxReview: (value: string) =>
     value.trim().length <= 300 || "Review cannot exceed 300 characters.",
 };
 
-const isNameValid = computed(() => name.value.trim().length >= 3);
-const isLocationValid = computed(() => location.value.trim().length >= 3);
-const isDescriptionValid = computed(() => {
-  const len = description.value.trim().length;
-  return len >= 15 && len <= 500;
-});
-const isReviewValid = computed(() => firstReview.value.trim().length <= 300);
+const displayedImages = computed(() =>
+  imagePreviewUrls.value.length > 0 ? imagePreviewUrls.value : [DEFAULT_IMAGE],
+);
+
+const hasUploadedImages = computed(() => imageFiles.value.length > 0);
 const hasAtLeastOneTag = computed(() => tags.value.length > 0);
+const hasFirstReview = computed(() => firstReviewText.value.trim().length > 0);
+
+const isSubmitting = computed(() => {
+  return placesStore.isSubmitting || reviewsStore.isSubmitting;
+});
 
 const canSubmit = computed(() => {
-  return (
-    isNameValid.value &&
-    isLocationValid.value &&
-    isDescriptionValid.value &&
-    isReviewValid.value &&
-    hasAtLeastOneTag.value &&
-    !addPlaceStore.isSubmitting
-  );
+  return hasAtLeastOneTag.value && !isSubmitting.value;
 });
 
-function startEditing(field: "name" | "location" | "description" | "review") {
+const heartIcon = computed(() => {
+  return wasCreatedAndSaved.value ? "mdi-heart" : "mdi-heart-outline";
+});
+
+function startEditing(field: EditableField) {
   editingField.value = field;
 }
 
@@ -325,7 +315,6 @@ function stopEditing() {
   editingField.value = null;
 
   if (!name.value.trim()) name.value = defaultName;
-  if (!location.value.trim()) location.value = defaultLocation;
   if (!description.value.trim()) description.value = defaultDescription;
 }
 
@@ -334,41 +323,45 @@ function triggerImageUpload() {
 }
 
 function deleteImage() {
-  imagePreviewUrl.value.splice(imageIndex.value, 1);
-  if (imagePreviewUrl.value.length == 0){
-    imagePreviewUrl.value.push("https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80");
+  if (!hasUploadedImages.value) return;
+
+  const removedPreviewUrl = imagePreviewUrls.value[imageIndex.value];
+  if (removedPreviewUrl?.startsWith("blob:")) {
+    URL.revokeObjectURL(removedPreviewUrl);
   }
 
-  if (images.length != 0){
-    images.splice(imageIndex.value, 1);
+  imagePreviewUrls.value.splice(imageIndex.value, 1);
+  imageFiles.value.splice(imageIndex.value, 1);
+
+  if (imagePreviewUrls.value.length === 0) {
+    imageIndex.value = 0;
+    return;
   }
-  if (imageIndex.value >= imagePreviewUrl.value.length){
-    imageIndex.value--;
+
+  if (imageIndex.value >= imagePreviewUrls.value.length) {
+    imageIndex.value = imagePreviewUrls.value.length - 1;
   }
 }
 
-async function handleImageSelected(event: Event) {
+function handleImageSelected(event: Event) {
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
+
   if (!file) return;
 
-  if (imagePreviewUrl.value[0]){
-    if (imagePreviewUrl.value.length === 1 && !imagePreviewUrl.value[0].startsWith("blob:")) {
-      imagePreviewUrl.value = [];
-    }
-  }
-  const isDuplicate = images.some(f =>
-    f.name === file.name &&
-    f.size === file.size &&
-    f.lastModified === file.lastModified
+  const isDuplicate = imageFiles.value.some(
+    (existingFile) =>
+      existingFile.name === file.name &&
+      existingFile.size === file.size &&
+      existingFile.lastModified === file.lastModified,
   );
 
-
-  if (!isDuplicate){
-    imagePreviewUrl.value.push(URL.createObjectURL(file));
-    images.push(file)
+  if (!isDuplicate) {
+    imageFiles.value.push(file);
+    imagePreviewUrls.value.push(URL.createObjectURL(file));
+    imageIndex.value = imagePreviewUrls.value.length - 1;
   }
-  
+
   target.value = "";
 }
 
@@ -387,54 +380,67 @@ function removeTag(tag: string) {
   tags.value = tags.value.filter((t) => t !== tag);
 }
 
-async function handleSubmit() {
-  addPlaceStore.isSubmitting = true;
-  const result = await formRef.value?.validate();
-  const imagesUrl: string[] = [];
-  for (const i of images){
-    const url = await addPlaceStore.uploadImage(i);
-    imagesUrl.push(url);
-
-  }
-  if (!result?.valid) return;
-  if (!hasAtLeastOneTag.value) return;
-  if (imagesUrl.length == 0){
-    imagesUrl.push("https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80");
-  }
-
-  await addPlaceStore.createPlace({
+function buildPlacePayload(images: string[]): PlaceFormPayload {
+  return {
     name: name.value.trim(),
-    location: location.value.trim(),
+    location: location.value,
     description: description.value.trim(),
-    images: imagesUrl,
-    tags: tags.value,
-    firstReview: firstReview.value.trim(),
-    firstReviewScore: reviewRating.value
-  });
+    images,
+    tags: [...tags.value],
+  };
+}
 
-  router.push({ name: "home" });
+function handleSubmit() {
+  formRef.value?.validate().then((result: { valid: boolean }) => {
+    if (!result?.valid || !hasAtLeastOneTag.value) return;
+
+    const uploadPromise =
+      imageFiles.value.length > 0
+        ? Promise.all(
+            imageFiles.value.map((file) =>
+              placesStore.uploadImage(file)
+            )
+          )
+        : Promise.resolve([DEFAULT_IMAGE]);
+
+    uploadPromise
+      .then((imageUrls) => {
+        return placesStore.createPlace(buildPlacePayload(imageUrls));
+      })
+      .then((createdPlace) => {
+        // auto save
+        savedPlacesStore.savePlace(createdPlace.id);
+        wasCreatedAndSaved.value = true;
+
+        if (!hasFirstReview.value) {
+          return createdPlace;
+        }
+
+        return reviewsStore
+          .addReview({
+            placeId: createdPlace.id,
+            rating: firstReviewRating.value,
+            text: firstReviewText.value.trim(),
+          })
+          .then(() => createdPlace);
+      })
+      .then(() => {
+        router.push({ name: "saved" });
+      })
+      .catch((error) => {
+        console.error("Failed to create place flow:", error);
+      });
+  });
 }
 
 onBeforeUnmount(() => {
-  for(const i of imagePreviewUrl.value){
-    if (i.startsWith("blob:")) {
-      URL.revokeObjectURL(i);
+  for (const url of imagePreviewUrls.value) {
+    if (url.startsWith("blob:")) {
+      URL.revokeObjectURL(url);
     }
   }
-  
 });
-
-const nextImage = () => {
-  imageIndex.value = (imageIndex.value + 1) % imagePreviewUrl.value.length;
-};
-
-const previousImage = () => {
-  imageIndex.value =
-    (imageIndex.value - 1 + imagePreviewUrl.value.length) %
-    imagePreviewUrl.value.length;
-};
 </script>
-
 
 <style scoped>
 .add-place-page {
@@ -458,6 +464,10 @@ const previousImage = () => {
   position: relative;
 }
 
+.place-carousel {
+  border-radius: 0;
+}
+
 .image-overlay {
   height: 100%;
   padding: 16px;
@@ -474,19 +484,40 @@ const previousImage = () => {
   gap: 12px;
 }
 
-.location-pill {
-  background: rgba(255, 255, 255, 0.92);
-  color: #1f2d3d;
-  font-size: 0.85rem;
-  font-weight: 600;
-  padding: 8px 12px;
-  border-radius: 999px;
-  cursor: text;
+.location-select-wrap {
+  min-width: 170px;
+  max-width: 230px;
 }
 
-.location-edit-wrap {
-  min-width: 180px;
-  max-width: 240px;
+.location-pill-select {
+  border-radius: 999px;
+}
+
+.location-pill-select :deep(.v-field) {
+  border-radius: 999px !important;
+  box-shadow: none !important;
+}
+
+.location-pill-select :deep(.v-field__overlay) {
+  display: none;
+}
+
+.location-pill-select :deep(.v-field__input) {
+  min-height: 38px;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1f2d3d;
+}
+
+.location-pill-select :deep(.v-select__selection) {
+  color: #1f2d3d;
+}
+
+.location-pill-select :deep(.v-field__append-inner) {
+  padding-top: 0;
+  align-items: center;
 }
 
 .image-counter-wrap {
@@ -495,7 +526,8 @@ const previousImage = () => {
   gap: 8px;
 }
 
-.upload-btn {
+.upload-btn,
+.delete-btn {
   background: rgba(255, 255, 255, 0.92);
 }
 
@@ -506,16 +538,6 @@ const previousImage = () => {
   font-weight: 600;
   padding: 8px 12px;
   border-radius: 999px;
-}
-
-.image-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.nav-btn {
-  background: rgba(255, 255, 255, 0.9);
 }
 
 .card-body {
@@ -559,53 +581,13 @@ const previousImage = () => {
   background: rgba(47, 93, 159, 0.06);
 }
 
-.rating-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.tags-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.chips-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
 .tag-input-wrap {
   min-width: 140px;
   max-width: 220px;
 }
 
-.review-toggle-row {
-  display: flex;
-  justify-content: center;
-}
-
-.first-review-box {
-  min-height: 76px;
-}
-
-.first-review-placeholder {
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: #f7f9fc;
-  color: #6b7280;
-  cursor: text;
-  line-height: 1.55;
-  white-space: pre-wrap;
-}
-
-.helper-text {
-  margin-top: 4px;
-  text-align: center;
-  font-size: 0.88rem;
-  color: #6b7280;
+.first-review-card {
+  background: #fbfcfe;
 }
 
 .actions-row {
@@ -644,13 +626,13 @@ const previousImage = () => {
     width: 100%;
   }
 
-  .location-edit-wrap {
-    min-width: 140px;
-    max-width: 180px;
-  }
-
   .tag-input-wrap {
     max-width: none;
+  }
+
+  .location-select-wrap {
+    min-width: 140px;
+    max-width: 180px;
   }
 }
 </style>

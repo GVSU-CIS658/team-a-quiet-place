@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from "vue";
+import { computed, ref, watch } from "vue";
 import FilterFab from "../components/FilterFab.vue";
 import PlaceCard from "../components/PlaceCard.vue";
 import { useSavedPlacesStore } from "../stores/savedPlacesStore";
@@ -75,17 +75,14 @@ import { useSavedPlacesStore } from "../stores/savedPlacesStore";
 const savedPlacesStore = useSavedPlacesStore();
 
 const filterDialog = ref(false);
-
-const filteredSavedPlaces = computed(
-  () => savedPlacesStore.filteredSavedPlaces,
-);
-onMounted(async () => {
-  await savedPlacesStore.getSavesDB();
-});
 const selectedPlaceId = ref<string | null>(null);
 
+const filteredSavedPlaces = computed(() => {
+  return savedPlacesStore.filteredSavedPlaces;
+});
+
 const selectedPlace = computed(() => {
-  if (selectedPlaceId.value === null) return null;
+  if (!selectedPlaceId.value) return null;
 
   return (
     filteredSavedPlaces.value.find(
@@ -93,6 +90,19 @@ const selectedPlace = computed(() => {
     ) ?? null
   );
 });
+
+watch(
+  filteredSavedPlaces,
+  (places) => {
+    if (!selectedPlaceId.value) return;
+
+    const stillExists = places.some((place) => place.id === selectedPlaceId.value);
+    if (!stillExists) {
+      selectedPlaceId.value = null;
+    }
+  },
+  { immediate: true },
+);
 
 function openPlace(placeId: string) {
   selectedPlaceId.value = placeId;

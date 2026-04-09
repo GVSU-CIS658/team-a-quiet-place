@@ -6,30 +6,42 @@
           Add your review
         </div>
 
-        <div class="mb-3">
-          <v-rating
-            v-model="reviewRating"
-            half-increments
-            color="primary"
-            density="compact"
+        <v-form ref="formRef" @submit.prevent="submitReview">
+          <div class="mb-3">
+            <v-rating
+              v-model="reviewRating"
+              half-increments
+              color="primary"
+              density="compact"
+            />
+            <div v-if="!isRatingValid" class="input-error-text mt-1">
+              Please choose a rating.
+            </div>
+          </div>
+
+          <v-textarea
+            v-model="reviewText"
+            label="Share how this place feels"
+            variant="outlined"
+            rounded="lg"
+            rows="3"
+            auto-grow
+            hide-details="auto"
+            :rules="[rules.required, rules.minReview, rules.maxReview]"
           />
-        </div>
 
-        <v-textarea
-          v-model="reviewText"
-          label="Share how this place feels"
-          variant="outlined"
-          rounded="lg"
-          rows="3"
-          auto-grow
-          hide-details
-        />
-
-        <div class="review-form-actions mt-3">
-          <v-btn color="primary" rounded="xl" @click="submitReview">
-            Post review
-          </v-btn>
-        </div>
+          <div class="review-form-actions mt-3">
+            <v-btn
+              color="primary"
+              rounded="xl"
+              type="submit"
+              :loading="reviewsStore.isSubmitting"
+              :disabled="!canSubmit"
+            >
+              Post review
+            </v-btn>
+          </div>
+        </v-form>
       </v-card-text>
     </v-card>
 
@@ -76,8 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { computed, ref } from "vue";
 import { useAuthStore } from "../stores/authStore";
 import { useReviewsStore } from "../stores/reviewsStore";
 
@@ -85,34 +96,52 @@ const props = defineProps<{
   placeId: string;
 }>();
 
-const router = useRouter();
 const auth = useAuthStore();
 const reviewsStore = useReviewsStore();
 
-onMounted(async () => {
-  await reviewsStore.getReviewsDB();
-});
+const formRef = ref();
 
 const reviewText = ref("");
 const reviewRating = ref(4);
+
+const rules = {
+  required: (value: string) => !!value?.trim() || "Review text is required.",
+  minReview: (value: string) =>
+    value.trim().length >= 8 || "Review must be at least 8 characters.",
+  maxReview: (value: string) =>
+    value.trim().length <= 300 || "Review cannot exceed 300 characters.",
+};
 
 const sortedReviews = computed(() => {
   return reviewsStore.getReviewsForPlace(props.placeId);
 });
 
-const requireLogin = () => {
-  router.push("/login");
-};
+const isRatingValid = computed(() => reviewRating.value > 0);
 
-const submitReview = () => {
+const canSubmit = computed(() => {
+  return isRatingValid.value && !reviewsStore.isSubmitting;
+});
+
+async function requireLogin() {
+  try {
+    await auth.signInWithGoogle();
+  } catch (error) {
+    console.error("Google sign-in failed:", error);
+  }
+}
+
+async function submitReview() {
   if (!auth.user) {
-    requireLogin();
-    return;
+    await requireLogin();
+
+    if (!auth.user) return;
   }
 
-  if (!reviewText.value.trim()) return;
+  const result = await formRef.value?.validate();
 
-  reviewsStore.addReview({
+  if (!result?.valid || !isRatingValid.value) return;
+
+  await reviewsStore.addReview({
     placeId: props.placeId,
     rating: reviewRating.value,
     text: reviewText.value.trim(),
@@ -120,15 +149,16 @@ const submitReview = () => {
 
   reviewText.value = "";
   reviewRating.value = 4;
-};
+  formRef.value?.resetValidation();
+}
 
-const formatReviewDate = (dateString: number) => {
-  return new Date(dateString).toLocaleDateString(undefined, {
+function formatReviewDate(dateValue: number) {
+  return new Date(dateValue).toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
-};
+}
 </script>
 
 <style scoped>
@@ -175,5 +205,10 @@ const formatReviewDate = (dateString: number) => {
   color: #6b7280;
   font-size: 0.92rem;
   padding: 12px 0;
+}
+
+.input-error-text {
+  color: rgb(var(--v-theme-error));
+  font-size: 0.75rem;
 }
 </style>

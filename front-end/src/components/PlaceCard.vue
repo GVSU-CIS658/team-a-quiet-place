@@ -61,7 +61,7 @@
       <div class="d-flex align-center ga-3 mb-4 flex-wrap">
         <div class="d-flex align-center ga-2">
           <v-rating
-            :model-value="displayRating"
+            :model-value="averageRating"
             half-increments
             readonly
             density="compact"
@@ -69,10 +69,10 @@
             size="small"
           />
           <span class="text-body-2 font-weight-medium">
-            {{ displayRating }}
+            {{ averageRating }}
           </span>
           <span class="text-body-2 text-medium-emphasis">
-            ({{ displayReviewCount }} reviews)
+            ({{ reviewCount }} reviews)
           </span>
         </div>
       </div>
@@ -106,14 +106,12 @@
           <ReviewSection :place-id="place.id" />
         </div>
       </v-expand-transition>
-
     </v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { computed, ref, watch } from "vue";
 import type { Place } from "../types/data";
 import { useAuthStore } from "../stores/authStore";
 import { useSavedPlacesStore } from "../stores/savedPlacesStore";
@@ -124,13 +122,10 @@ const props = defineProps<{
   place: Place;
 }>();
 
-const router = useRouter();
 const auth = useAuthStore();
 const savedPlacesStore = useSavedPlacesStore();
 const reviewsStore = useReviewsStore();
-onMounted(async () => {
-  await savedPlacesStore.getSavesDB();
-});
+
 const imageIndex = ref(0);
 const showReviews = ref(false);
 const expandedDescription = ref(false);
@@ -147,6 +142,7 @@ watch(
 const shortDescription = computed(() => {
   const text = props.place.description ?? "";
   const limit = 120;
+
   if (text.length <= limit) return text;
   return `${text.slice(0, limit).trim()}...`;
 });
@@ -157,38 +153,29 @@ const displayedDescription = computed(() => {
     : shortDescription.value;
 });
 
-const isSaved = computed(() => {
-  return savedPlacesStore.isSaved(props.place.id);
-});
+const isSaved = computed(() => savedPlacesStore.isSaved(props.place.id));
 
-const reviewCountFromStore = computed(() => {
+const reviewCount = computed(() => {
   return reviewsStore.getReviewCountForPlace(props.place.id);
 });
 
-const averageRatingFromStore = computed(() => {
+const averageRating = computed(() => {
   return reviewsStore.getAverageRatingForPlace(props.place.id);
 });
 
-const displayReviewCount = computed(() => {
-  return reviewCountFromStore.value > 0
-    ? reviewCountFromStore.value
-    : props.place.reviews;
-});
+async function requireLogin() {
+  try {
+    await auth.signInWithGoogle();
+  } catch (error) {
+    console.error("Google sign-in failed:", error);
+  }
+}
 
-const displayRating = computed(() => {
-  return averageRatingFromStore.value > 0
-    ? averageRatingFromStore.value
-    : props.place.rating;
-});
-
-const requireLogin = () => {
-  router.push("/login");
-};
-
-const toggleSaved = () => {
+async function toggleSaved() {
   if (!auth.user) {
-    requireLogin();
-    return;
+    await requireLogin();
+
+    if (!auth.user) return;
   }
 
   if (isSaved.value) {
@@ -196,7 +183,7 @@ const toggleSaved = () => {
   } else {
     savedPlacesStore.savePlace(props.place.id);
   }
-};
+}
 </script>
 
 <style scoped>
@@ -276,14 +263,6 @@ const toggleSaved = () => {
   justify-content: center;
 }
 
-.helper-text {
-  margin-top: 16px;
-  text-align: center;
-  font-size: 0.88rem;
-  color: #6b7280;
-}
-
-/* softer carousel controls */
 .place-carousel :deep(.v-window__controls) {
   padding: 0 12px;
 }
@@ -332,7 +311,6 @@ const toggleSaved = () => {
   transform: scale(1);
 }
 
-/* softer slide/fade */
 .place-carousel :deep(.v-window-x-transition-enter-active),
 .place-carousel :deep(.v-window-x-transition-leave-active),
 .place-carousel :deep(.v-window-x-reverse-transition-enter-active),

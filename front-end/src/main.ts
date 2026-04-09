@@ -22,6 +22,6 @@ app.use(router);
 app.use(vuetify);
 
 const authStore = useAuthStore();
-authStore.initAuth();
+authStore.init();
 
 app.mount("#app");

@@ -47,9 +47,8 @@
     />
 
     <FilterFab v-model="filterDialog" :store="placesStore" />
-  </div>
 
-    <v-dialog v-model="auth.showLogoutDialog" max-width="400">
+    <v-dialog v-model="showLogoutDialog" max-width="400">
       <v-card rounded="xl">
         <v-card-title class="text-h6">
           Success
@@ -59,42 +58,40 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn color="primary" @click="auth.showLogoutDialog = false">
+          <v-btn color="primary" @click="showLogoutDialog = false">
             OK
           </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted } from "vue";
+import { computed, ref, watch } from "vue";
 import FilterFab from "../components/FilterFab.vue";
 import PlaceCard from "../components/PlaceCard.vue";
 import { usePlacesStore } from "../stores/placesStore";
 import { useAuthStore } from "../stores/authStore";
+
 const auth = useAuthStore();
+const placesStore = usePlacesStore();
 
 const slideDirection = ref("slide-left");
 const currentIndex = ref(0);
 const filterDialog = ref(false);
-
-const placesStore = usePlacesStore();
-
-onMounted(async () => {
-  await placesStore.getPlacesDB();
-});
-
-const filteredPlaces = computed(() => placesStore.filteredPlaces);
+const showLogoutDialog = ref(false);
 
 const currentPlace = computed(() => {
-  if (filteredPlaces.value.length === 0) return null;
-  return filteredPlaces.value[currentIndex.value] ?? null;
+  const places = placesStore.filteredPlaces;
+
+  if (places.length === 0) return null;
+
+  return places[currentIndex.value] ?? null;
 });
 
 watch(
-  filteredPlaces,
+  () => placesStore.filteredPlaces,
   (places) => {
     if (places.length === 0) {
       currentIndex.value = 0;
@@ -108,19 +105,31 @@ watch(
   { immediate: true },
 );
 
-const nextPlace = () => {
-  if (filteredPlaces.value.length === 0) return;
-  slideDirection.value = "slide-left";
-  currentIndex.value = (currentIndex.value + 1) % filteredPlaces.value.length;
-};
+watch(
+  () => auth.user,
+  (newUser, oldUser) => {
+    if (!newUser && oldUser) {
+      showLogoutDialog.value = true;
+    }
+  },
+);
 
-const previousPlace = () => {
-  if (filteredPlaces.value.length === 0) return;
+function nextPlace() {
+  const places = placesStore.filteredPlaces;
+  if (places.length === 0) return;
+
+  slideDirection.value = "slide-left";
+  currentIndex.value = (currentIndex.value + 1) % places.length;
+}
+
+function previousPlace() {
+  const places = placesStore.filteredPlaces;
+  if (places.length === 0) return;
+
   slideDirection.value = "slide-right";
   currentIndex.value =
-    (currentIndex.value - 1 + filteredPlaces.value.length) %
-    filteredPlaces.value.length;
-};
+    (currentIndex.value - 1 + places.length) % places.length;
+}
 </script>
 
 <style scoped>

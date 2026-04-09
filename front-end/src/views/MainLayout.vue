@@ -1,10 +1,46 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import AppDrawer from "../components/AppDrawer.vue";
+import { usePlacesStore } from "../stores/placesStore";
+import { useReviewsStore } from "../stores/reviewsStore";
+import { useSavedPlacesStore } from "../stores/savedPlacesStore";
+import { useAuthStore } from "../stores/authStore";
 
 const drawer = ref(false);
 const route = useRoute();
+
+const authStore = useAuthStore();
+const placesStore = usePlacesStore();
+const reviewsStore = useReviewsStore();
+const savedPlacesStore = useSavedPlacesStore();
+
+onMounted(() => {
+  placesStore.readPlaces();
+  reviewsStore.readReviews();
+
+  if (authStore.user) {
+    savedPlacesStore.readSaves();
+  }
+});
+
+watch(
+  () => authStore.user,
+  (user) => {
+    savedPlacesStore.stopReading();
+    savedPlacesStore.clearSaved();
+
+    if (user) {
+      savedPlacesStore.readSaves();
+    }
+  },
+);
+
+onBeforeUnmount(() => {
+  placesStore.stopReading();
+  reviewsStore.stopReading();
+  savedPlacesStore.stopReading();
+});
 </script>
 
 <template>

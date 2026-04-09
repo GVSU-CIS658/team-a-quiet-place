@@ -38,17 +38,21 @@
       </div>
 
       <v-card-text class="filter-body">
-        <v-text-field
+        <!-- ✅ LOCATION DROPDOWN -->
+        <v-select
           v-model="store.filters.location"
+          :items="locationOptions"
           label="Location"
-          placeholder="Building, area, or campus spot"
+          placeholder="Any"
           variant="outlined"
           rounded="lg"
           prepend-inner-icon="mdi-map-marker-outline"
+          clearable
           hide-details="auto"
           class="field-spacing"
         />
 
+        <!-- ✅ RATING -->
         <v-select
           v-model="store.filters.rating"
           :items="ratingOptions"
@@ -66,9 +70,11 @@
 </template>
 
 <script setup lang="ts">
+import { type LocationType } from "../types/data";
+
 type FilterStore = {
   filters: {
-    location: string;
+    location: LocationType | null;
     rating: number | null;
   };
   resetFilters: () => void;
@@ -82,6 +88,9 @@ defineProps<{
 const emit = defineEmits<{
   (e: "update:modelValue", value: boolean): void;
 }>();
+
+// ✅ dropdown options
+const locationOptions: LocationType[] = ["Valley", "Pew", "Health"];
 
 const ratingOptions = [1, 2, 3, 4, 5];
 </script>

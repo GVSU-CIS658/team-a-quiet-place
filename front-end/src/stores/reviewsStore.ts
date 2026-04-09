@@ -1,12 +1,12 @@
 import { defineStore } from "pinia";
 import type { Review } from "../types/data";
 import {
-  addDoc,
   collection,
   onSnapshot,
   serverTimestamp,
 } from "firebase/firestore";
-import { auth, db } from "../firebase/firebase";
+import { auth, db, functions } from '../firebase/firebase'
+import { httpsCallable } from "firebase/functions";
 
 type CreateReviewInput = {
   placeId: string;
@@ -105,10 +105,11 @@ export const useReviewsStore = defineStore("reviews", {
           createdAt: serverTimestamp(),
         };
 
-        const docRef = await addDoc(collection(db, "reviews"), payload);
+        const addReview = httpsCallable(functions, "addReview");
+        const reviewid = await addReview(payload);
 
         return {
-          id: docRef.id,
+          id: reviewid.data as string,
           placeId: input.placeId,
           rating: input.rating,
           text: input.text,

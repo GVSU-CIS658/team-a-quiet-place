@@ -1,8 +1,9 @@
 import { defineStore } from "pinia";
 import type { Place, LocationType } from "../types/data";
-import { onSnapshot, collection, addDoc } from "firebase/firestore";
-import { db, store } from "../firebase/firebase";
+import { onSnapshot, collection } from "firebase/firestore";
+import { db, store, functions } from "../firebase/firebase";
 import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
+import { httpsCallable } from "firebase/functions";
 
 type CreatePlaceInput = {
   name: string;
@@ -114,10 +115,11 @@ export const usePlacesStore = defineStore("places", {
           tags: input.tags,
         };
 
-        const docRef = await addDoc(collection(db, "places"), payload);
+        const addPlace = httpsCallable(functions, "addPlace");
+        const placeid = await addPlace(payload);
 
         return {
-          id: docRef.id,
+          id: placeid.data as string,
           ...payload,
         };
       } catch (error) {

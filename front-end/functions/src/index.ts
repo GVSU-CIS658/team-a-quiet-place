@@ -47,7 +47,10 @@ export const addReview = onCall(async (request) => {
     throw new Error("Review text cannot be empty");
   }
 
-  const reviewRef = await admin.firestore().collection("reviews").add(review);
+    const reviewRef = await admin.firestore().collection("reviews").add({
+      ...review,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
 
   await reviewRef.update({ id: reviewRef.id });
 

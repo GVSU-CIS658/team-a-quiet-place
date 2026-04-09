@@ -3,7 +3,6 @@ import type { Review } from "../types/data";
 import {
   collection,
   onSnapshot,
-  serverTimestamp,
 } from "firebase/firestore";
 import { auth, db, functions } from '../firebase/firebase'
 import { httpsCallable } from "firebase/functions";
@@ -102,7 +101,6 @@ export const useReviewsStore = defineStore("reviews", {
           rating: input.rating,
           text: input.text,
           user,
-          createdAt: serverTimestamp(),
         };
 
         const addReview = httpsCallable(functions, "addReview");

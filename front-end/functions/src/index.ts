@@ -52,8 +52,6 @@ export const addReview = onCall(async (request) => {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-  await reviewRef.update({ id: reviewRef.id });
-
   return reviewRef.id;
 });
 
@@ -65,6 +63,5 @@ export const addPlace = onCall(async (request) => {
 
   const placeRef = await admin.firestore().collection("places").add(place);
 
-  await placeRef.update({ id: placeRef.id });
   return placeRef.id;
 });

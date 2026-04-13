@@ -1,18 +1,16 @@
 import { defineStore } from "pinia";
 import type { Review } from "../types/data";
-import {
-  addDoc,
-  collection,
-  onSnapshot,
-  serverTimestamp,
-} from "firebase/firestore";
-import { auth, db } from "../firebase/firebase";
+import { collection, onSnapshot } from "firebase/firestore";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { db } from "../firebase/firebase";
 
 type CreateReviewInput = {
   placeId: string;
   rating: number;
   text: string;
 };
+
+const functions = getFunctions();
 
 export const useReviewsStore = defineStore("reviews", {
   state: () => ({
@@ -24,35 +22,10 @@ export const useReviewsStore = defineStore("reviews", {
 
   getters: {
     getReviewsForPlace: (state) => {
-      return (placeId: string): Review[] => {
-        return state.reviews
-          .filter((review) => review.placeId === placeId)
+      return (placeId: string): Review[] =>
+        state.reviews
+          .filter((r) => r.placeId === placeId)
           .sort((a, b) => b.createdAt - a.createdAt);
-      };
-    },
-
-    getReviewCountForPlace: (state) => {
-      return (placeId: string): number => {
-        return state.reviews.filter((review) => review.placeId === placeId)
-          .length;
-      };
-    },
-
-    getAverageRatingForPlace: (state) => {
-      return (placeId: string): number => {
-        const placeReviews = state.reviews.filter(
-          (review) => review.placeId === placeId,
-        );
-
-        if (placeReviews.length === 0) return 0;
-
-        const total = placeReviews.reduce(
-          (sum, review) => sum + review.rating,
-          0,
-        );
-
-        return Number((total / placeReviews.length).toFixed(1));
-      };
     },
   },
 
@@ -63,11 +36,11 @@ export const useReviewsStore = defineStore("reviews", {
       this.unsubscribe = onSnapshot(
         collection(db, "reviews"),
         (snapshot) => {
-          this.reviews = snapshot.docs.map((docSnap) => {
-            const data = docSnap.data();
+          this.reviews = snapshot.docs.map((doc) => {
+            const data = doc.data();
 
             return {
-              id: docSnap.id,
+              id: doc.id,
               placeId: data.placeId,
               createdAt: data.createdAt?.toMillis?.() ?? 0,
               rating: data.rating,
@@ -79,7 +52,7 @@ export const useReviewsStore = defineStore("reviews", {
         (error) => {
           console.error("Error reading reviews:", error);
           this.error = "Failed to read reviews.";
-        },
+        }
       );
     },
 
@@ -90,31 +63,13 @@ export const useReviewsStore = defineStore("reviews", {
       }
     },
 
-    async addReview(input: CreateReviewInput): Promise<Review> {
+    async addReview(input: CreateReviewInput) {
       this.isSubmitting = true;
       this.error = null;
 
       try {
-        const user = auth.currentUser?.displayName ?? "Anonymous";
-
-        const payload = {
-          placeId: input.placeId,
-          rating: input.rating,
-          text: input.text,
-          user,
-          createdAt: serverTimestamp(),
-        };
-
-        const docRef = await addDoc(collection(db, "reviews"), payload);
-
-        return {
-          id: docRef.id,
-          placeId: input.placeId,
-          rating: input.rating,
-          text: input.text,
-          user,
-          createdAt: Date.now(),
-        };
+        const fn = httpsCallable(functions, "addReview");
+        await fn(input);
       } catch (error) {
         console.error("Failed to create review:", error);
         this.error = "Failed to create review.";

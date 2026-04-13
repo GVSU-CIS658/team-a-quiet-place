@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import type { Place, LocationType } from "../types/data";
-import { onSnapshot, collection, addDoc } from "firebase/firestore";
+import { onSnapshot, collection } from "firebase/firestore";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { db, store } from "../firebase/firebase";
 import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
 
@@ -16,6 +17,8 @@ type Filters = {
   location: LocationType | null;
   rating: number | null;
 };
+
+const functions = getFunctions();
 
 export const usePlacesStore = defineStore("places", {
   state: () => ({
@@ -62,7 +65,6 @@ export const usePlacesStore = defineStore("places", {
       };
     },
 
-    // READ
     readPlaces() {
       if (this.unsubscribe) return;
 
@@ -81,7 +83,7 @@ export const usePlacesStore = defineStore("places", {
               reviews: data.reviews,
               images: data.images,
               tags: data.tags,
-            };
+            } as Place;
           });
         },
         (error) => {
@@ -98,8 +100,7 @@ export const usePlacesStore = defineStore("places", {
       }
     },
 
-    // ADD
-    async createPlace(input: CreatePlaceInput): Promise<Place> {
+    async createPlace(input: CreatePlaceInput): Promise<string> {
       this.isSubmitting = true;
       this.error = null;
 
@@ -108,18 +109,14 @@ export const usePlacesStore = defineStore("places", {
           name: input.name.trim(),
           location: input.location,
           description: input.description.trim(),
-          rating: 0,
-          reviews: 0,
           images: input.images,
           tags: input.tags,
         };
 
-        const docRef = await addDoc(collection(db, "places"), payload);
+        const addPlace = httpsCallable(functions, "addPlace");
+        const result = await addPlace(payload);
 
-        return {
-          id: docRef.id,
-          ...payload,
-        };
+        return result.data as string;
       } catch (error) {
         console.error("Failed to create place:", error);
         this.error = "Failed to create place.";

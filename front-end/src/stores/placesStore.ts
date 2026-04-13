@@ -1,8 +1,7 @@
 import { defineStore } from "pinia";
 import type { Place, LocationType } from "../types/data";
 import { onSnapshot, collection } from "firebase/firestore";
-import { getFunctions, httpsCallable } from "firebase/functions";
-import { db, store } from "../firebase/firebase";
+import { db, store, functions } from "../firebase/firebase";
 import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
 import { httpsCallable } from "firebase/functions";
 
@@ -18,8 +17,6 @@ type Filters = {
   location: LocationType | null;
   rating: number | null;
 };
-
-const functions = getFunctions();
 
 export const usePlacesStore = defineStore("places", {
   state: () => ({
@@ -66,6 +63,7 @@ export const usePlacesStore = defineStore("places", {
       };
     },
 
+    // READ
     readPlaces() {
       if (this.unsubscribe) return;
 
@@ -84,7 +82,7 @@ export const usePlacesStore = defineStore("places", {
               reviews: data.reviews,
               images: data.images,
               tags: data.tags,
-            } as Place;
+            };
           });
         },
         (error) => {
@@ -101,7 +99,8 @@ export const usePlacesStore = defineStore("places", {
       }
     },
 
-    async createPlace(input: CreatePlaceInput): Promise<string> {
+    // ADD
+    async createPlace(input: CreatePlaceInput): Promise<Place> {
       this.isSubmitting = true;
       this.error = null;
 
@@ -110,14 +109,19 @@ export const usePlacesStore = defineStore("places", {
           name: input.name.trim(),
           location: input.location,
           description: input.description.trim(),
+          rating: 0,
+          reviews: 0,
           images: input.images,
           tags: input.tags,
         };
 
         const addPlace = httpsCallable(functions, "addPlace");
-        const result = await addPlace(payload);
+        const placeid = await addPlace(payload);
 
-        return result.data as string;
+        return {
+          id: placeid.data as string,
+          ...payload,
+        };
       } catch (error) {
         console.error("Failed to create place:", error);
         this.error = "Failed to create place.";

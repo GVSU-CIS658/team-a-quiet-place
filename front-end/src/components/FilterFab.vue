@@ -38,6 +38,7 @@
       </div>
 
       <v-card-text class="filter-body">
+        <!-- ✅ LOCATION DROPDOWN -->
         <v-select
           v-model="store.filters.location"
           :items="locationOptions"

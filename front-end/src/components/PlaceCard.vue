@@ -61,7 +61,7 @@
       <div class="d-flex align-center ga-3 mb-4 flex-wrap">
         <div class="d-flex align-center ga-2">
           <v-rating
-            :model-value="place.rating"
+            :model-value="averageRating"
             half-increments
             readonly
             density="compact"
@@ -69,10 +69,10 @@
             size="small"
           />
           <span class="text-body-2 font-weight-medium">
-            {{ place.rating }}
+            {{ averageRating }}
           </span>
           <span class="text-body-2 text-medium-emphasis">
-            ({{ place.reviews }} reviews)
+            ({{ reviewCount }} reviews)
           </span>
         </div>
       </div>
@@ -115,6 +115,7 @@ import { computed, ref, watch } from "vue";
 import type { Place } from "../types/data";
 import { useAuthStore } from "../stores/authStore";
 import { useSavedPlacesStore } from "../stores/savedPlacesStore";
+import { useReviewsStore } from "../stores/reviewsStore";
 import ReviewSection from "./ReviewSection.vue";
 
 const props = defineProps<{
@@ -123,6 +124,7 @@ const props = defineProps<{
 
 const auth = useAuthStore();
 const savedPlacesStore = useSavedPlacesStore();
+const reviewsStore = useReviewsStore();
 
 const imageIndex = ref(0);
 const showReviews = ref(false);
@@ -152,6 +154,14 @@ const displayedDescription = computed(() => {
 });
 
 const isSaved = computed(() => savedPlacesStore.isSaved(props.place.id));
+
+const reviewCount = computed(() => {
+  return reviewsStore.getReviewCountForPlace(props.place.id);
+});
+
+const averageRating = computed(() => {
+  return reviewsStore.getAverageRatingForPlace(props.place.id);
+});
 
 async function requireLogin() {
   try {

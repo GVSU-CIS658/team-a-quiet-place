@@ -282,9 +282,7 @@ const rules = {
 
 const firstReviewRules = {
   optionalMinReview: (value: string) =>
-    !value.trim() ||
-    value.trim().length >= 8 ||
-    "Review must be at least 8 characters.",
+    !value.trim() || value.trim().length >= 8 || "Review must be at least 8 characters.",
   maxReview: (value: string) =>
     value.trim().length <= 300 || "Review cannot exceed 300 characters.",
 };
@@ -392,52 +390,47 @@ function buildPlacePayload(images: string[]): PlaceFormPayload {
   };
 }
 
-async function requireLogin() {
-  try {
-    await auth.signInWithGoogle();
-  } catch (error) {
-    console.error("Google sign-in failed:", error);
-  }
-}
+function handleSubmit() {
+  formRef.value?.validate().then((result: { valid: boolean }) => {
+    if (!result?.valid || !hasAtLeastOneTag.value) return;
 
-async function handleSubmit() {
-  if (!auth.user) {
-    await requireLogin();
-
-    if (!auth.user) return;
-  }
-
-  const result = await formRef.value?.validate();
-
-  if (!result?.valid || !hasAtLeastOneTag.value) return;
-
-  try {
-    const imageUrls =
+    const uploadPromise =
       imageFiles.value.length > 0
-        ? await Promise.all(
-            imageFiles.value.map((file) => placesStore.uploadImage(file)),
+        ? Promise.all(
+            imageFiles.value.map((file) =>
+              placesStore.uploadImage(file)
+            )
           )
-        : [DEFAULT_IMAGE];
+        : Promise.resolve([DEFAULT_IMAGE]);
 
-    const createdPlaceId = await placesStore.createPlace(
-      buildPlacePayload(imageUrls),
-    );
+    uploadPromise
+      .then((imageUrls) => {
+        return placesStore.createPlace(buildPlacePayload(imageUrls));
+      })
+      .then((createdPlace) => {
+        // auto save
+        savedPlacesStore.savePlace(createdPlace.id);
+        wasCreatedAndSaved.value = true;
 
-    await savedPlacesStore.savePlace(createdPlaceId);
-    wasCreatedAndSaved.value = true;
+        if (!hasFirstReview.value) {
+          return createdPlace;
+        }
 
-    if (hasFirstReview.value) {
-      await reviewsStore.addReview({
-        placeId: createdPlaceId,
-        rating: firstReviewRating.value,
-        text: firstReviewText.value.trim(),
+        return reviewsStore
+          .addReview({
+            placeId: createdPlace.id,
+            rating: firstReviewRating.value,
+            text: firstReviewText.value.trim(),
+          })
+          .then(() => createdPlace);
+      })
+      .then(() => {
+        router.push({ name: "saved" });
+      })
+      .catch((error) => {
+        console.error("Failed to create place flow:", error);
       });
-    }
-
-    router.push({ name: "saved" });
-  } catch (error) {
-    console.error("Failed to create place flow:", error);
-  }
+  });
 }
 
 onBeforeUnmount(() => {

@@ -4,6 +4,7 @@ import { onSnapshot, collection } from "firebase/firestore";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { db, store } from "../firebase/firebase";
 import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
+import { httpsCallable } from "firebase/functions";
 
 type CreatePlaceInput = {
   name: string;

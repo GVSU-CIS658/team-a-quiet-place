@@ -141,15 +141,19 @@ async function submitReview() {
 
   if (!result?.valid || !isRatingValid.value) return;
 
-  await reviewsStore.addReview({
-    placeId: props.placeId,
-    rating: reviewRating.value,
-    text: reviewText.value.trim(),
-  });
+  try {
+    await reviewsStore.addReview({
+      placeId: props.placeId,
+      rating: reviewRating.value,
+      text: reviewText.value.trim(),
+    });
 
-  reviewText.value = "";
-  reviewRating.value = 4;
-  formRef.value?.resetValidation();
+    reviewText.value = "";
+    reviewRating.value = 4;
+    formRef.value?.resetValidation();
+  } catch (error) {
+    console.error("Failed to submit review:", error);
+  }
 }
 
 function formatReviewDate(dateValue: number) {

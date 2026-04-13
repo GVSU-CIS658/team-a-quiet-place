@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import { usePlacesStore } from "./placesStore";
-import { useReviewsStore } from "./reviewsStore";
-import type { Place, Saves, LocationType  } from "../types/data";
+import type { Place, Saves, LocationType } from "../types/data";
 import {
   addDoc,
   collection,
@@ -44,20 +43,12 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
     },
 
     filteredSavedPlaces(): Place[] {
-      const reviewsStore = useReviewsStore();
-
       return this.savedPlaces.filter((place) => {
-        const averageRating = reviewsStore.getAverageRatingForPlace(place.id);
-
         const locationMatch =
-          !this.filters.location ||
-          place.location
-            .toLowerCase()
-            .includes(this.filters.location.toLowerCase());
+          !this.filters.location || place.location === this.filters.location;
 
         const ratingMatch =
-          this.filters.rating === null ||
-          averageRating >= this.filters.rating;
+          this.filters.rating === null || place.rating >= this.filters.rating;
 
         return locationMatch && ratingMatch;
       });

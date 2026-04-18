@@ -67,10 +67,23 @@ export const addReview = onCall(async (request) => {
 
 export const addPlace = onCall(async (request) => {
   const uid = request.auth?.uid;
+  const user = request.auth?.token?.name ?? "Anonymous";
   if (!uid) throw new Error("Not authenticated");
   const place = request.data;
 
-  const placeRef = await admin.firestore().collection("places").add(place);
+  const placeRef = await admin.firestore().collection("places").add({
+    name: place.name?.trim(),
+    location: place.location,
+    description: place.description?.trim(),
+    images: Array.isArray(place.images) ? place.images : [],
+    tags: Array.isArray(place.tags) ? place.tags : [],
+    rating: 0,
+    reviews: 0,
+    approvalStatus: "pending",
+    createdByUid: uid,
+    createdByName: user,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
 
   return placeRef.id;
 });

@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
-import type { Place, LocationType } from "../types/data";
-import { onSnapshot, collection } from "firebase/firestore";
+import type { Place, LocationType, ApprovalStatus } from "../types/data";
+import { onSnapshot, collection, doc, updateDoc } from "firebase/firestore";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { db, store } from "../firebase/firebase";
 import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
@@ -35,15 +35,37 @@ export const usePlacesStore = defineStore("places", {
   }),
 
   getters: {
-    filteredPlaces(state): Place[] {
-      return state.places.filter((place) => {
+    approvedPlaces(state): Place[] {
+      return state.places.filter((place) => place.approvalStatus === "approved");
+    },
+
+    pendingPlaces(state): Place[] {
+      return state.places.filter((place) => place.approvalStatus === "pending");
+    },
+
+    filteredPlaces(): Place[] {
+      return this.approvedPlaces.filter((place) => {
         const locationMatch =
-          !state.filters.location ||
-          place.location === state.filters.location;
+          !this.filters.location ||
+          place.location === this.filters.location;
 
         const ratingMatch =
-          state.filters.rating === null ||
-          place.rating >= state.filters.rating;
+          this.filters.rating === null ||
+          place.rating >= this.filters.rating;
+
+        return locationMatch && ratingMatch;
+      });
+    },
+
+    filteredPendingPlaces(): Place[] {
+      return this.pendingPlaces.filter((place) => {
+        const locationMatch =
+          !this.filters.location ||
+          place.location === this.filters.location;
+
+        const ratingMatch =
+          this.filters.rating === null ||
+          place.rating >= this.filters.rating;
 
         return locationMatch && ratingMatch;
       });
@@ -79,10 +101,14 @@ export const usePlacesStore = defineStore("places", {
               name: data.name,
               location: data.location as LocationType,
               description: data.description,
-              rating: data.rating,
-              reviews: data.reviews,
-              images: data.images,
-              tags: data.tags,
+              rating: data.rating ?? 0,
+              reviews: data.reviews ?? 0,
+              images: data.images ?? [],
+              tags: data.tags ?? [],
+              approvalStatus: (data.approvalStatus ?? "approved") as ApprovalStatus,
+              createdByUid: data.createdByUid,
+              createdByName: data.createdByName,
+              createdAt: data.createdAt?.toMillis?.() ?? undefined,
             } as Place;
           });
         },
@@ -130,6 +156,26 @@ export const usePlacesStore = defineStore("places", {
       const storageRef = ref(store, `images/${Date.now()}-${file.name}`);
       const snapshot = await uploadBytes(storageRef, file);
       return await getDownloadURL(snapshot.ref);
+    },
+
+    async updateApprovalStatus(
+      placeId: string,
+      approvalStatus: ApprovalStatus,
+    ): Promise<void> {
+      this.isSubmitting = true;
+      this.error = null;
+
+      try {
+        await updateDoc(doc(db, "places", placeId), {
+          approvalStatus,
+        });
+      } catch (error) {
+        console.error("Failed to update approval status:", error);
+        this.error = "Failed to update approval status.";
+        throw error;
+      } finally {
+        this.isSubmitting = false;
+      }
     },
   },
 });

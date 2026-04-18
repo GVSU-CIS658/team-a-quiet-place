@@ -44,6 +44,15 @@
             class="drawer-item"
             @click="goTo('add-place')"
           />
+
+          <v-list-item
+            v-if="isLoggedIn"
+            prepend-icon="mdi-shield-check-outline"
+            title="Admin Review"
+            rounded="xl"
+            class="drawer-item"
+            @click="goTo('admin-review')"
+          />
         </v-list>
       </div>
 

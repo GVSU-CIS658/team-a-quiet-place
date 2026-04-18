@@ -198,6 +198,10 @@
         </v-card>
 
         <div class="actions-row">
+          <div class="submit-note">
+            New places stay pending until an admin approves them for the main feed.
+          </div>
+
           <v-btn
             icon="mdi-close"
             variant="text"
@@ -599,9 +603,17 @@ onBeforeUnmount(() => {
 
 .actions-row {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
   gap: 16px;
   margin-top: 20px;
+}
+
+.submit-note {
+  flex: 1;
+  color: #6b7280;
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
 .actions-row :deep(.v-btn) {
@@ -625,8 +637,14 @@ onBeforeUnmount(() => {
   }
 
   .actions-row {
-    flex-direction: column-reverse;
+    flex-direction: column;
+    align-items: stretch;
     margin-top: 16px;
+  }
+
+  .submit-note {
+    width: 100%;
+    font-size: 0.84rem;
   }
 
   .actions-row :deep(.v-btn) {

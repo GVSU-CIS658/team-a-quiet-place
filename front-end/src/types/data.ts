@@ -1,3 +1,5 @@
+export type ApprovalStatus = "approved" | "pending" | "rejected";
+
 export type Review = {
   id: string;
   placeId: string;
@@ -16,6 +18,10 @@ export type Place = {
   reviews: number;
   images: string[];
   tags: string[];
+  approvalStatus: ApprovalStatus;
+  createdByUid?: string;
+  createdByName?: string;
+  createdAt?: number;
 };
 
 export type Saves = {
@@ -24,6 +30,4 @@ export type Saves = {
   savedAt: number;
   user: string;
 };
-
-
 export type LocationType = "Valley" | "Pew" | "Health";

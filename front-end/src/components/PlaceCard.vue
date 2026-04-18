@@ -37,6 +37,7 @@
         </div>
 
         <v-btn
+          v-if="showSaveButton"
           :icon="isSaved ? 'mdi-heart' : 'mdi-heart-outline'"
           variant="text"
           color="primary"
@@ -117,9 +118,15 @@ import { useAuthStore } from "../stores/authStore";
 import { useSavedPlacesStore } from "../stores/savedPlacesStore";
 import ReviewSection from "./ReviewSection.vue";
 
-const props = defineProps<{
-  place: Place;
-}>();
+const props = withDefaults(
+  defineProps<{
+    place: Place;
+    showSaveButton?: boolean;
+  }>(),
+  {
+    showSaveButton: true,
+  },
+);
 
 const auth = useAuthStore();
 const savedPlacesStore = useSavedPlacesStore();

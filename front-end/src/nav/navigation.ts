@@ -3,6 +3,7 @@ import MainLayout from "../views/MainLayout.vue";
 import HomeView from "../views/HomeView.vue";
 import SavedView from "../views/SavedView.vue";
 import AddPlaceView from "../views/AddPlaceView.vue";
+import AdminReviewView from "../views/AdminReviewView.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -28,6 +29,12 @@ const router = createRouter({
           name: "add-place",
           component: AddPlaceView,
           meta: { subtitle: "Share a new quiet place" },
+        },
+        {
+          path: "admin-review",
+          name: "admin-review",
+          component: AdminReviewView,
+          meta: { subtitle: "Review pending quiet places" },
         },
       ],
     },

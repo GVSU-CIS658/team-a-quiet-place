@@ -1,6 +1,28 @@
 <template>
   <div class="add-place-page">
     <div class="editor-shell">
+      <v-dialog v-model="showSubmittedDialog" max-width="420" persistent>
+        <v-card rounded="xl">
+          <v-card-title class="text-h6 pt-6 px-6">
+            Submitted for review
+          </v-card-title>
+
+          <v-card-text class="px-6 pb-2">
+            <div class="text-body-2 text-medium-emphasis">
+              Your place was saved and sent to the admin review queue. It will appear
+              in the main feed after approval.
+            </div>
+          </v-card-text>
+
+          <v-card-actions class="px-6 pb-6">
+            <v-spacer />
+            <v-btn color="primary" rounded="xl" @click="goToHomeAfterSubmit">
+              Back to home
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
       <v-form ref="formRef" @submit.prevent="handleSubmit">
         <v-card class="place-card" rounded="xl" elevation="4">
           <div class="image-wrapper">
@@ -14,56 +36,57 @@
               <v-carousel-item
                 v-for="(image, index) in displayedImages"
                 :key="`${image}-${index}`"
-                :src="image"
-                cover
               >
-                <div class="image-overlay">
-                  <div class="top-image-row">
-                    <div class="location-select-wrap">
-                      <v-select
-                        v-model="location"
-                        :items="locationOptions"
-                        variant="solo"
-                        density="compact"
-                        hide-details
-                        flat
-                        rounded="pill"
-                        bg-color="rgba(255, 255, 255, 0.92)"
-                        class="location-pill-select"
-                      />
-                    </div>
-
-                    <div class="image-counter-wrap">
-                      <v-btn
-                        icon="mdi-trash-can"
-                        size="small"
-                        variant="flat"
-                        class="delete-btn"
-                        :disabled="!hasUploadedImages"
-                        @click="deleteImage"
-                      />
-
-                      <v-btn
-                        icon="mdi-camera-plus-outline"
-                        size="small"
-                        variant="flat"
-                        class="upload-btn"
-                        @click="triggerImageUpload"
-                      />
-
-                      <div class="image-counter">
-                        {{ imageIndex + 1 }} / {{ displayedImages.length }}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <v-img :src="image" height="430" contain class="place-image" />
               </v-carousel-item>
             </v-carousel>
+
+            <div class="image-overlay">
+              <div class="top-image-row">
+                <div class="location-select-wrap">
+                  <v-select
+                    v-model="location"
+                    :items="locationOptions"
+                    variant="solo"
+                    density="compact"
+                    hide-details
+                    flat
+                    rounded="pill"
+                    bg-color="rgba(255, 255, 255, 0.92)"
+                    class="location-pill-select"
+                  />
+                </div>
+
+                <div class="image-counter-wrap">
+                  <v-btn
+                    icon="mdi-trash-can"
+                    size="small"
+                    variant="flat"
+                    class="delete-btn"
+                    :disabled="!hasUploadedImages"
+                    @click="deleteImage"
+                  />
+
+                  <v-btn
+                    icon="mdi-camera-plus-outline"
+                    size="small"
+                    variant="flat"
+                    class="upload-btn"
+                    @click="triggerImageUpload"
+                  />
+
+                  <div class="image-counter">
+                    {{ imageIndex + 1 }} / {{ displayedImages.length }}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <input
               ref="fileInputRef"
               type="file"
               accept="image/*"
+              multiple
               class="hidden-file-input"
               @change="handleImageSelected"
             />
@@ -273,6 +296,7 @@ const editingField = ref<EditableField>(null);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 
 const wasCreatedAndSaved = ref(false);
+const showSubmittedDialog = ref(false);
 
 const rules = {
   required: (value: string) => !!value?.trim() || "This field is required.",
@@ -351,20 +375,28 @@ function deleteImage() {
 
 function handleImageSelected(event: Event) {
   const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
+  const files = Array.from(target.files ?? []);
 
-  if (!file) return;
+  if (files.length === 0) return;
 
-  const isDuplicate = imageFiles.value.some(
-    (existingFile) =>
-      existingFile.name === file.name &&
-      existingFile.size === file.size &&
-      existingFile.lastModified === file.lastModified,
-  );
+  let addedCount = 0;
 
-  if (!isDuplicate) {
+  for (const file of files) {
+    const isDuplicate = imageFiles.value.some(
+      (existingFile) =>
+        existingFile.name === file.name &&
+        existingFile.size === file.size &&
+        existingFile.lastModified === file.lastModified,
+    );
+
+    if (isDuplicate) continue;
+
     imageFiles.value.push(file);
     imagePreviewUrls.value.push(URL.createObjectURL(file));
+    addedCount += 1;
+  }
+
+  if (addedCount > 0) {
     imageIndex.value = imagePreviewUrls.value.length - 1;
   }
 
@@ -438,10 +470,15 @@ async function handleSubmit() {
       });
     }
 
-    router.push({ name: "saved" });
+    showSubmittedDialog.value = true;
   } catch (error) {
     console.error("Failed to create place flow:", error);
   }
+}
+
+function goToHomeAfterSubmit() {
+  showSubmittedDialog.value = false;
+  router.push({ name: "home" });
 }
 
 onBeforeUnmount(() => {
@@ -479,13 +516,20 @@ onBeforeUnmount(() => {
   border-radius: 0;
 }
 
+.place-image {
+  background: linear-gradient(180deg, #eef3f8 0%, #dfe8f2 100%);
+}
+
 .image-overlay {
+  position: absolute;
+  inset: 0;
   height: 100%;
   padding: 16px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.04));
+  pointer-events: none;
 }
 
 .top-image-row {
@@ -498,6 +542,7 @@ onBeforeUnmount(() => {
 .location-select-wrap {
   min-width: 170px;
   max-width: 230px;
+  pointer-events: auto;
 }
 
 .location-pill-select {
@@ -535,6 +580,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+  pointer-events: auto;
 }
 
 .upload-btn,

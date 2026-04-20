@@ -27,7 +27,9 @@ export const onReviewCreated = onDocumentCreated(
 
     const newReviews = currentReviews + 1;
     const newRating =
-      (currentRating * currentReviews + review.rating) / newReviews;
+      Math.round(
+        (((currentRating * currentReviews + review.rating) / newReviews) * 10),
+      ) / 10;
 
     await placeRef.update({
       rating: newRating,

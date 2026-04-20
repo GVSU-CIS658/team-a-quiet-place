@@ -4,6 +4,7 @@ import HomeView from "../views/HomeView.vue";
 import SavedView from "../views/SavedView.vue";
 import AddPlaceView from "../views/AddPlaceView.vue";
 import AdminReviewView from "../views/AdminReviewView.vue";
+import AdminDashboardView from "../views/AdminDashboardView.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -35,6 +36,15 @@ const router = createRouter({
           name: "admin-review",
           component: AdminReviewView,
           meta: { subtitle: "Review pending quiet places" },
+        },
+        {
+          path: "admin-dashboard",
+          name: "admin-dashboard",
+          component: AdminDashboardView,
+          meta: {
+            subtitle: "Manage all quiet places",
+            layout: "wide",
+          },
         },
       ],
     },

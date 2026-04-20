@@ -15,6 +15,7 @@ import '@mdi/font/css/materialdesignicons.css';
 
 // Check - in
 import { useAuthStore } from "./stores/authStore";
+import { useAdminStore } from "./stores/adminStore";
 
 const app = createApp(App);
 app.use(createPinia());
@@ -22,6 +23,8 @@ app.use(router);
 app.use(vuetify);
 
 const authStore = useAuthStore();
+const adminStore = useAdminStore();
 authStore.init();
+adminStore.init();
 
 app.mount("#app");

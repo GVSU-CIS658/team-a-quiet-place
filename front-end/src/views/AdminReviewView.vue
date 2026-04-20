@@ -4,7 +4,7 @@
       <v-card rounded="xl" elevation="2" class="pa-8 text-center">
         <div class="text-h6 font-weight-bold mb-2">Sign in required</div>
         <div class="text-body-2 text-medium-emphasis mb-4">
-          Sign in first, then enter the admin password to review pending places.
+          Sign in first to review pending places.
         </div>
 
         <v-btn color="primary" rounded="xl" @click="signIn">
@@ -13,7 +13,25 @@
       </v-card>
     </div>
 
-    <template v-else-if="isUnlocked">
+    <div v-else-if="isCheckingAdmin" class="empty-state">
+      <v-card rounded="xl" elevation="2" class="pa-8 text-center">
+        <div class="text-h6 font-weight-bold mb-2">Checking access</div>
+        <div class="text-body-2 text-medium-emphasis">
+          Verifying your admin membership.
+        </div>
+      </v-card>
+    </div>
+
+    <div v-else-if="!isAdmin" class="empty-state">
+      <v-card rounded="xl" elevation="2" class="pa-8 text-center">
+        <div class="text-h6 font-weight-bold mb-2">Admin access required</div>
+        <div class="text-body-2 text-medium-emphasis">
+          Your account is signed in, but it is not active in the `admins` collection.
+        </div>
+      </v-card>
+    </div>
+
+    <template v-else>
       <div v-if="currentPlace" class="card-stage">
         <div class="card-column">
           <transition :name="slideDirection" mode="out-in">
@@ -70,37 +88,6 @@
       <FilterFab v-model="filterDialog" :store="placesStore" />
     </template>
 
-    <v-dialog v-model="passwordDialog" persistent max-width="420">
-      <v-card rounded="xl">
-        <v-card-title class="text-h6 pt-6 px-6">
-          Admin access
-        </v-card-title>
-
-        <v-card-text class="px-6 pb-2">
-          <div class="text-body-2 text-medium-emphasis mb-4">
-            Enter the admin password to review pending places.
-          </div>
-
-          <v-text-field
-            v-model="passwordInput"
-            label="Admin password"
-            type="password"
-            variant="outlined"
-            rounded="lg"
-            hide-details="auto"
-            :error-messages="passwordError ? [passwordError] : []"
-            @keydown.enter.prevent="unlockAdmin"
-          />
-        </v-card-text>
-
-        <v-card-actions class="px-6 pb-6">
-          <v-spacer />
-          <v-btn color="primary" rounded="xl" @click="unlockAdmin">
-            Unlock
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
   </div>
 </template>
 
@@ -109,22 +96,29 @@ import { computed, ref, watch } from "vue";
 import type { ApprovalStatus } from "../types/data";
 import FilterFab from "../components/FilterFab.vue";
 import PlaceCard from "../components/PlaceCard.vue";
+import { useAdminStore } from "../stores/adminStore";
 import { useAuthStore } from "../stores/authStore";
 import { usePlacesStore } from "../stores/placesStore";
 
-const ADMIN_SESSION_KEY = "quiet-place-admin-unlocked";
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD ?? "quiet-place-admin";
-
 const auth = useAuthStore();
+const adminStore = useAdminStore();
 const placesStore = usePlacesStore();
 
 const slideDirection = ref("slide-left");
 const currentIndex = ref(0);
 const filterDialog = ref(false);
-const passwordDialog = ref(false);
-const passwordInput = ref("");
-const passwordError = ref("");
-const isUnlocked = ref(false);
+
+const isAdmin = computed(() => adminStore.isAdmin);
+const isCheckingAdmin = computed(() => adminStore.isChecking);
+const isUnlocked = computed(() => adminStore.isUnlocked);
+
+async function signIn() {
+  try {
+    await auth.signInWithGoogle();
+  } catch (error) {
+    console.error("Google sign-in failed:", error);
+  }
+}
 
 const currentPlace = computed(() => {
   const places = placesStore.filteredPendingPlaces;
@@ -133,23 +127,6 @@ const currentPlace = computed(() => {
 
   return places[currentIndex.value] ?? null;
 });
-
-watch(
-  () => auth.user,
-  (user) => {
-    if (!user) {
-      isUnlocked.value = false;
-      passwordDialog.value = false;
-      sessionStorage.removeItem(ADMIN_SESSION_KEY);
-      return;
-    }
-
-    const hasSessionAccess = sessionStorage.getItem(ADMIN_SESSION_KEY) === "true";
-    isUnlocked.value = hasSessionAccess;
-    passwordDialog.value = !hasSessionAccess;
-  },
-  { immediate: true },
-);
 
 watch(
   () => placesStore.filteredPendingPlaces,
@@ -166,35 +143,14 @@ watch(
   { immediate: true },
 );
 
-function unlockAdmin() {
-  if (passwordInput.value !== ADMIN_PASSWORD) {
-    passwordError.value = "Password did not match.";
-    return;
-  }
-
-  passwordError.value = "";
-  passwordInput.value = "";
-  isUnlocked.value = true;
-  passwordDialog.value = false;
-  sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
-}
-
-async function signIn() {
-  try {
-    await auth.signInWithGoogle();
-  } catch (error) {
-    console.error("Google sign-in failed:", error);
-  }
-}
-
 async function reviewPlace(approvalStatus: ApprovalStatus) {
   const place = currentPlace.value;
-  if (!place) return;
+  if (!place || !isUnlocked.value) return;
 
   slideDirection.value = approvalStatus === "approved" ? "slide-left" : "slide-right";
 
   try {
-    await placesStore.updateApprovalStatus(place.id, approvalStatus);
+    await placesStore.adminUpdateApprovalStatus(place.id, approvalStatus);
   } catch (error) {
     console.error("Failed to review place:", error);
   }

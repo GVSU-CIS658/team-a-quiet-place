@@ -1,6 +1,11 @@
 import { defineStore } from "pinia";
 import type { Place, LocationType, ApprovalStatus } from "../types/data";
-import { onSnapshot, collection, doc, updateDoc } from "firebase/firestore";
+import {
+  onSnapshot,
+  collection,
+  query,
+  where,
+} from "firebase/firestore";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { db, store } from "../firebase/firebase";
 import { uploadBytes, getDownloadURL, ref } from "firebase/storage";
@@ -24,9 +29,9 @@ export const usePlacesStore = defineStore("places", {
   state: () => ({
     places: [] as Place[],
     unsubscribe: null as (() => void) | null,
+    readMode: null as "all" | "approved" | null,
 
     isSubmitting: false,
-    error: null as string | null,
 
     filters: {
       location: null as LocationType | null,
@@ -87,11 +92,22 @@ export const usePlacesStore = defineStore("places", {
       };
     },
 
-    readPlaces() {
-      if (this.unsubscribe) return;
+    readPlaces(mode: "all" | "approved" = "approved") {
+      if (this.unsubscribe && this.readMode === mode) return;
+
+      this.stopReading();
+      this.readMode = mode;
+
+      const placesRef =
+        mode === "all"
+          ? collection(db, "places")
+          : query(
+              collection(db, "places"),
+              where("approvalStatus", "==", "approved"),
+            );
 
       this.unsubscribe = onSnapshot(
-        collection(db, "places"),
+        placesRef,
         (snapshot) => {
           this.places = snapshot.docs.map((doc) => {
             const data = doc.data();
@@ -114,7 +130,6 @@ export const usePlacesStore = defineStore("places", {
         },
         (error) => {
           console.error("Error reading places:", error);
-          this.error = "Failed to read places.";
         }
       );
     },
@@ -124,54 +139,74 @@ export const usePlacesStore = defineStore("places", {
         this.unsubscribe();
         this.unsubscribe = null;
       }
+
+      this.readMode = null;
     },
 
     async createPlace(input: CreatePlaceInput): Promise<string> {
       this.isSubmitting = true;
-      this.error = null;
 
       try {
-        const payload = {
-          name: input.name.trim(),
-          location: input.location,
-          description: input.description.trim(),
-          images: input.images,
-          tags: input.tags,
-        };
-
+        // initialize callable function
         const addPlace = httpsCallable(functions, "addPlace");
-        const result = await addPlace(payload);
+        // call the function with the payload and wait for the result
+        const result = await addPlace(input);
 
         return result.data as string;
       } catch (error) {
         console.error("Failed to create place:", error);
-        this.error = "Failed to create place.";
         throw error;
       } finally {
         this.isSubmitting = false;
       }
     },
 
+    // Uploads an image file to Firebase Storage and returns the download URL
     async uploadImage(file: File): Promise<string> {
       const storageRef = ref(store, `images/${Date.now()}-${file.name}`);
       const snapshot = await uploadBytes(storageRef, file);
       return await getDownloadURL(snapshot.ref);
     },
 
-    async updateApprovalStatus(
+    // lets admin update the approval status of a place - either approve, reject or set back to pending
+    async adminUpdateApprovalStatus(
       placeId: string,
       approvalStatus: ApprovalStatus,
     ): Promise<void> {
       this.isSubmitting = true;
-      this.error = null;
 
       try {
-        await updateDoc(doc(db, "places", placeId), {
+        // initialize callable function
+        const adminUpdatePlaceStatus = httpsCallable(
+          functions,
+          "adminUpdatePlaceStatus",
+        );
+
+        await adminUpdatePlaceStatus({
+          placeId,
           approvalStatus,
         });
       } catch (error) {
         console.error("Failed to update approval status:", error);
-        this.error = "Failed to update approval status.";
+        throw error;
+      } finally {
+        this.isSubmitting = false;
+      }
+    },
+
+    // lets admin delete a place
+    async adminDeletePlace(placeId: string): Promise<void> {
+      this.isSubmitting = true;
+
+      try {
+        // initialize callable function
+        const adminDeletePlace = httpsCallable(functions, "adminDeletePlace");
+
+        await adminDeletePlace({
+          placeId,
+        });
+      } catch (error) {
+        console.error("Failed to delete place:", error);
         throw error;
       } finally {
         this.isSubmitting = false;

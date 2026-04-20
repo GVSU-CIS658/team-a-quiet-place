@@ -23,7 +23,6 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
     saved: [] as Saves[],
     unsubscribe: null as (() => void) | null,
     isSubmitting: false,
-    error: null as string | null,
 
     filters: {
       location: null as LocationType | null,
@@ -35,6 +34,8 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
     savedPlaces(state): Place[] {
       const placesStore = usePlacesStore();
 
+      // Map saved entries to their corresponding place objects,
+      // if the place no longer exists in the places store, it will be filtered out (ex: when savedPlaces is more than storedPlaces)
       return state.saved
         .map((entry) =>
           placesStore.places.find((place) => place.id === entry.placeId),
@@ -54,6 +55,7 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
       });
     },
 
+    // Check if a specific place is saved in the state.saved array by its placeId
     isSaved: (state) => {
       return (placeId: string): boolean => {
         return state.saved.some((entry) => entry.placeId === placeId);
@@ -64,7 +66,6 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
   actions: {
     async savePlace(placeId: string): Promise<void> {
       this.isSubmitting = true;
-      this.error = null;
 
       try {
         const user = auth.currentUser?.uid;
@@ -82,7 +83,6 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
         });
       } catch (error) {
         console.error("Failed to create save:", error);
-        this.error = "Failed to create save.";
         throw error;
       } finally {
         this.isSubmitting = false;
@@ -91,7 +91,6 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
 
     async removePlace(placeId: string): Promise<void> {
       this.isSubmitting = true;
-      this.error = null;
 
       try {
         const user = auth.currentUser?.uid;
@@ -110,7 +109,6 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
         );
       } catch (error) {
         console.error("Failed to delete save:", error);
-        this.error = "Failed to delete save.";
         throw error;
       } finally {
         this.isSubmitting = false;
@@ -135,6 +133,8 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
       this.filters.rating = rating;
     },
 
+    // initialize a real-time listener for the user's saved places, 
+    // and update the state.saved array whenever there are changes in the "saves" collection for the current user
     readSaves() {
       if (this.unsubscribe) return;
 
@@ -162,7 +162,6 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
         },
         (error) => {
           console.error("Error reading saves:", error);
-          this.error = "Failed to read saves.";
         },
       );
     },

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import AppDrawer from "../components/AppDrawer.vue";
+import { useAdminStore } from "../stores/adminStore";
 import { usePlacesStore } from "../stores/placesStore";
-import { useReviewsStore } from "../stores/reviewsStore";
 import { useSavedPlacesStore } from "../stores/savedPlacesStore";
 import { useAuthStore } from "../stores/authStore";
 
@@ -11,18 +11,21 @@ const drawer = ref(false);
 const route = useRoute();
 
 const authStore = useAuthStore();
+const adminStore = useAdminStore();
 const placesStore = usePlacesStore();
-const reviewsStore = useReviewsStore();
 const savedPlacesStore = useSavedPlacesStore();
 
-onMounted(() => {
-  placesStore.readPlaces();
-  reviewsStore.readReviews();
+const isWideLayout = computed(() => route.meta.layout === "wide");
+const isAdminRoute = computed(() => String(route.name ?? "").startsWith("admin"));
 
-  if (authStore.user) {
-    savedPlacesStore.readSaves();
+function syncPlaceReadMode() {
+  if (isAdminRoute.value && adminStore.isUnlocked) {
+    placesStore.readPlaces("all");
+    return;
   }
-});
+
+  placesStore.readPlaces("approved");
+}
 
 watch(
   () => authStore.user,
@@ -34,21 +37,31 @@ watch(
       savedPlacesStore.readSaves();
     }
   },
+  { immediate: true },
+);
+
+watch(
+  [() => route.name, () => adminStore.isUnlocked, () => adminStore.isChecking],
+  () => {
+    if (isAdminRoute.value && adminStore.isChecking) return;
+    syncPlaceReadMode();
+  },
+  { immediate: true },
 );
 
 onBeforeUnmount(() => {
   placesStore.stopReading();
-  reviewsStore.stopReading();
   savedPlacesStore.stopReading();
 });
 </script>
 
 <template>
   <div class="app-shell">
+    <!-- <AppDrawer :model-value="drawerOpen" @update:model-value="drawerOpen = $event" /> -->
     <AppDrawer v-model="drawer" />
 
     <v-main class="main-area">
-      <div class="layout-shell">
+      <div :class="['layout-shell', { 'layout-shell-wide': isWideLayout }]">
         <header class="top-bar">
           <v-btn
             class="menu-btn"
@@ -68,7 +81,7 @@ onBeforeUnmount(() => {
           <div class="top-bar-spacer" />
         </header>
 
-        <section class="page-content">
+        <section :class="['page-content', { 'page-content-wide': isWideLayout }]">
           <router-view />
         </section>
       </div>
@@ -92,6 +105,12 @@ onBeforeUnmount(() => {
   padding: 12px 16px 32px;
 }
 
+.layout-shell-wide {
+  width: min(100%, 1480px);
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
 .top-bar {
   position: sticky;
   top: 12px;
@@ -100,7 +119,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   min-height: 56px;
-  margin: 0px 12px 12px;
+  margin: 0px 0px 12px;
   padding: 10px 12px;
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(14px);
@@ -145,9 +164,18 @@ onBeforeUnmount(() => {
   min-height: calc(100vh - 140px);
 }
 
+.page-content-wide {
+  padding: 4px 0px 0;
+}
+
 @media (max-width: 640px) {
   .layout-shell {
     padding: 12px 16px 24px;
+  }
+
+  .layout-shell-wide {
+    padding-left: 12px;
+    padding-right: 12px;
   }
 
   .top-bar {
@@ -163,6 +191,10 @@ onBeforeUnmount(() => {
 
   .app-subtitle {
     font-size: 0.88rem;
+  }
+
+  .page-content-wide {
+    padding: 0;
   }
 }
 </style>

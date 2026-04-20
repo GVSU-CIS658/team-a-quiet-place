@@ -13,21 +13,21 @@
           v-for="(image, index) in place.images"
           :key="`${place.id}-${index}`"
         >
-          <v-img :src="image" height="430" cover>
-            <div class="image-overlay">
-              <div class="top-image-row">
-                <div class="location-pill">
-                  {{ place.location }}
-                </div>
-
-                <div class="image-counter">
-                  {{ imageIndex + 1 }} / {{ place.images.length }}
-                </div>
-              </div>
-            </div>
-          </v-img>
+          <v-img :src="image" height="430" contain class="place-image" />
         </v-carousel-item>
       </v-carousel>
+
+      <div class="image-overlay">
+        <div class="top-image-row">
+          <div class="location-pill">
+            {{ place.location }}
+          </div>
+
+          <div class="image-counter">
+            {{ imageIndex + 1 }} / {{ place.images.length }}
+          </div>
+        </div>
+      </div>
     </div>
 
     <v-card-text class="pa-6">
@@ -37,6 +37,7 @@
         </div>
 
         <v-btn
+          v-if="showSaveButton"
           :icon="isSaved ? 'mdi-heart' : 'mdi-heart-outline'"
           variant="text"
           color="primary"
@@ -117,9 +118,15 @@ import { useAuthStore } from "../stores/authStore";
 import { useSavedPlacesStore } from "../stores/savedPlacesStore";
 import ReviewSection from "./ReviewSection.vue";
 
-const props = defineProps<{
-  place: Place;
-}>();
+const props = withDefaults(
+  defineProps<{
+    place: Place;
+    showSaveButton?: boolean;
+  }>(),
+  {
+    showSaveButton: true,
+  },
+);
 
 const auth = useAuthStore();
 const savedPlacesStore = useSavedPlacesStore();
@@ -192,13 +199,20 @@ async function toggleSaved() {
   border-top-right-radius: inherit;
 }
 
+.place-image {
+  background: linear-gradient(180deg, #eef3f8 0%, #dfe8f2 100%);
+}
+
 .image-overlay {
+  position: absolute;
+  inset: 0;
   height: 100%;
   padding: 16px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.04));
+  pointer-events: none;
 }
 
 .top-image-row {

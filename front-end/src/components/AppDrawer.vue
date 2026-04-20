@@ -44,13 +44,30 @@
             class="drawer-item"
             @click="goTo('add-place')"
           />
+
+          <v-list-item
+            v-if="isAdmin"
+            prepend-icon="mdi-shield-check-outline"
+            title="Admin Review"
+            rounded="xl"
+            class="drawer-item"
+            @click="goTo('admin-review')"
+          />
+
+          <v-list-item
+            v-if="isAdmin"
+            prepend-icon="mdi-view-dashboard-outline"
+            title="Admin Dashboard"
+            rounded="xl"
+            class="drawer-item"
+            @click="goTo('admin-dashboard')"
+          />
         </v-list>
       </div>
 
       <div class="drawer-footer">
         <v-divider class="mb-4" />
 
-        <!-- ✅ LOGOUT -->
         <v-btn
           v-if="isLoggedIn"
           block
@@ -64,7 +81,6 @@
           Log out
         </v-btn>
 
-        <!-- ✅ LOGIN -->
         <v-btn
           v-else
           block
@@ -84,6 +100,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useRouter } from "vue-router";
+import { useAdminStore } from "../stores/adminStore";
 import { useAuthStore } from "../stores/authStore";
 
 defineProps<{
@@ -95,9 +112,11 @@ const emit = defineEmits<{
 }>();
 
 const auth = useAuthStore();
+const adminStore = useAdminStore();
 const router = useRouter();
 
 const isLoggedIn = computed(() => !!auth.user);
+const isAdmin = computed(() => adminStore.isAdmin);
 
 function closeDrawer() {
   emit("update:modelValue", false);

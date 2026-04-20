@@ -15,8 +15,11 @@ export const useAuthStore = defineStore("authStore", {
 
     actions: {
         init() {
+            // A Firebase Authentication is the main object that manages authentication
+            // it provides methods for signing in, signing out, and listening for authentication state changes
             const auth = getAuth();
 
+            // Listen for authentication state changes to update the user state accordingly
             onAuthStateChanged(auth, (user) => {
                 this.user = user;
             });

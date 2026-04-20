@@ -45,50 +45,52 @@
       </v-card-text>
     </v-card>
 
-    <div class="review-list">
-      <v-card
-        v-for="review in sortedReviews"
-        :key="review.id"
-        variant="outlined"
-        rounded="lg"
-        class="mb-3 review-item"
-      >
-        <v-card-text class="pa-4">
-          <div class="review-header mb-2">
-            <div>
-              <div class="review-user">
-                {{ review.user }}
+    <div class="review-list-shell">
+      <div class="review-list">
+        <v-card
+          v-for="review in sortedReviews"
+          :key="review.id"
+          variant="outlined"
+          rounded="lg"
+          class="mb-3 review-item"
+        >
+          <v-card-text class="pa-4">
+            <div class="review-header mb-2">
+              <div>
+                <div class="review-user">
+                  {{ review.user }}
+                </div>
+                <div class="review-date">
+                  {{ formatReviewDate(review.createdAt) }}
+                </div>
               </div>
-              <div class="review-date">
-                {{ formatReviewDate(review.createdAt) }}
-              </div>
+
+              <v-rating
+                :model-value="review.rating"
+                half-increments
+                readonly
+                density="compact"
+                size="x-small"
+                color="primary"
+              />
             </div>
 
-            <v-rating
-              :model-value="review.rating"
-              half-increments
-              readonly
-              density="compact"
-              size="x-small"
-              color="primary"
-            />
-          </div>
+            <div class="text-body-2 text-medium-emphasis">
+              {{ review.text }}
+            </div>
+          </v-card-text>
+        </v-card>
 
-          <div class="text-body-2 text-medium-emphasis">
-            {{ review.text }}
-          </div>
-        </v-card-text>
-      </v-card>
-
-      <div v-if="sortedReviews.length === 0" class="empty-review-text">
-        No reviews yet.
+        <div v-if="sortedReviews.length === 0" class="empty-review-text">
+          No reviews yet.
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { useAuthStore } from "../stores/authStore";
 import { useReviewsStore } from "../stores/reviewsStore";
 
@@ -114,6 +116,22 @@ const rules = {
 
 const sortedReviews = computed(() => {
   return reviewsStore.getReviewsForPlace(props.placeId);
+});
+
+watch(
+  () => props.placeId,
+  (placeId, previousPlaceId) => {
+    if (previousPlaceId && previousPlaceId !== placeId) {
+      reviewsStore.stopReadingPlace(previousPlaceId);
+    }
+
+    reviewsStore.ensureReviewsForPlace(placeId);
+  },
+  { immediate: true },
+);
+
+onBeforeUnmount(() => {
+  reviewsStore.stopReadingPlace(props.placeId);
 });
 
 const isRatingValid = computed(() => reviewRating.value > 0);
@@ -183,6 +201,11 @@ function formatReviewDate(dateValue: number) {
 .review-list {
   display: flex;
   flex-direction: column;
+}
+
+.review-list-shell {
+  max-height: 28rem;
+  overflow-y: auto;
 }
 
 .review-header {

@@ -13,10 +13,11 @@
 - [`src/main.ts`](/home/node/team-a-quiet-place/front-end/src/main.ts) creates the app, installs Pinia/router/Vuetify, and eagerly calls `authStore.init()`.
 - [`src/nav/navigation.ts`](/home/node/team-a-quiet-place/front-end/src/nav/navigation.ts) mounts all pages under [`src/views/MainLayout.vue`](/home/node/team-a-quiet-place/front-end/src/views/MainLayout.vue).
 - `MainLayout` owns the shared chrome, switches `placesStore.readPlaces()` between `"approved"` and `"all"` based on admin route access, resets user-save listeners when auth changes, and can widen the page shell when a route sets `meta.layout = "wide"`.
+- [`src/composables/useDirectionalNavigation.ts`](/home/node/team-a-quiet-place/front-end/src/composables/useDirectionalNavigation.ts) centralizes left/right arrow key and touch-swipe navigation for views that page through place cards.
 
 ## Current Product Shape
-- `HomeView` shows one place card at a time, with local carousel-style navigation and a floating filter action.
-- `SavedView` shows a grid of saved places, then opens a selected place in an overlay card.
+- `HomeView` shows one unsaved place card at a time, with carousel-style navigation, keyboard arrows, touch swipes, and a floating filter action.
+- `SavedView` shows a grid of saved places, then opens a selected place in an overlay card with arrow buttons, keyboard arrows, and touch swipes.
 - `AddPlaceView` is a richer editor flow that supports multi-image selection, uses contained image previews with an anchored overlay, validates input, creates a place through a callable function, auto-saves it for the author, and optionally creates the first review.
 - `AdminReviewView` is the moderation queue for pending places.
 - `AdminDashboardView` is the wide admin screen for stats, status changes, and destructive deletion.
@@ -31,6 +32,7 @@
 - For image-heavy cards, prefer contained images with deliberate background fill when preserving the full photo matters more than edge-to-edge cropping.
 - When adding Firebase interactions, prefer placing reads and writes in stores instead of inside view files.
 - Shared admin membership logic belongs in [`src/stores/adminStore.ts`](/home/node/team-a-quiet-place/front-end/src/stores/adminStore.ts), not duplicated across views or components.
+- Reuse `useDirectionalNavigation` for any new left/right card navigation instead of adding another custom keydown/swipe implementation.
 
 ## Useful Commands
 - `npm run dev`

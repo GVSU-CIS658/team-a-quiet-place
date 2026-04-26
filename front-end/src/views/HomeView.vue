@@ -1,6 +1,11 @@
 <template>
   <div class="home-page">
-    <div v-if="currentPlace" class="card-stage">
+    <div
+      v-if="currentPlace"
+      class="card-stage"
+      @touchstart.passive="handleTouchStart"
+      @touchend="handleTouchEnd"
+    >
       <div class="card-column">
         <transition :name="slideDirection" mode="out-in">
           <PlaceCard :key="currentPlace.id" :place="currentPlace" />
@@ -54,6 +59,7 @@
 import { computed, ref, watch } from "vue";
 import FilterFab from "../components/FilterFab.vue";
 import PlaceCard from "../components/PlaceCard.vue";
+import { useDirectionalNavigation } from "../composables/useDirectionalNavigation";
 import { usePlacesStore } from "../stores/placesStore";
 import { useSavedPlacesStore } from "../stores/savedPlacesStore";
 
@@ -122,6 +128,11 @@ function previousPlace() {
   currentIndex.value =
     (currentIndex.value - 1 + places.length) % places.length;
 }
+
+const { handleTouchStart, handleTouchEnd } = useDirectionalNavigation({
+  next: nextPlace,
+  previous: previousPlace,
+});
 </script>
 
 <style scoped>

@@ -55,14 +55,38 @@
 
       <transition name="overlay-fade">
         <div v-if="selectedPlace" class="place-overlay" @click="closePlace">
-          <div class="place-overlay-content" @click.stop>
+          <div
+            class="place-overlay-content"
+            @click.stop
+            @touchstart.passive="handleTouchStart"
+            @touchend="handleTouchEnd"
+          >
             <PlaceCard :place="selectedPlace" />
             <div class="place-overlay-actions">
               <v-btn
-                icon="mdi-close"
-                variant="text"
+                icon="mdi-chevron-left"
+                variant="outlined"
                 color="white"
+                rounded="xl"
+                :disabled="filteredSavedPlaces.length < 2"
+                @click="previousSavedPlace"
+              />
+
+              <v-btn
+                icon="mdi-close"
+                variant="flat"
+                color="white"
+                rounded="xl"
                 @click="closePlace"
+              />
+
+              <v-btn
+                icon="mdi-chevron-right"
+                variant="outlined"
+                color="white"
+                rounded="xl"
+                :disabled="filteredSavedPlaces.length < 2"
+                @click="nextSavedPlace"
               />
             </div>
           </div>
@@ -85,6 +109,7 @@
 import { computed, ref, watch } from "vue";
 import FilterFab from "../components/FilterFab.vue";
 import PlaceCard from "../components/PlaceCard.vue";
+import { useDirectionalNavigation } from "../composables/useDirectionalNavigation";
 import { useAuthStore } from "../stores/authStore";
 import { useSavedPlacesStore } from "../stores/savedPlacesStore";
 
@@ -107,6 +132,14 @@ const selectedPlace = computed(() => {
     filteredSavedPlaces.value.find(
       (place) => place.id === selectedPlaceId.value,
     ) ?? null
+  );
+});
+
+const selectedPlaceIndex = computed(() => {
+  if (!selectedPlaceId.value) return -1;
+
+  return filteredSavedPlaces.value.findIndex(
+    (place) => place.id === selectedPlaceId.value,
   );
 });
 
@@ -133,6 +166,35 @@ function openPlace(placeId: string) {
 function closePlace() {
   selectedPlaceId.value = null;
 }
+
+function nextSavedPlace() {
+  const places = filteredSavedPlaces.value;
+  if (places.length < 2) return;
+
+  const nextIndex = (selectedPlaceIndex.value + 1) % places.length;
+  const nextPlace = places[nextIndex];
+  if (!nextPlace) return;
+
+  selectedPlaceId.value = nextPlace.id;
+}
+
+function previousSavedPlace() {
+  const places = filteredSavedPlaces.value;
+  if (places.length < 2) return;
+
+  const previousIndex =
+    (selectedPlaceIndex.value - 1 + places.length) % places.length;
+  const previousPlace = places[previousIndex];
+  if (!previousPlace) return;
+
+  selectedPlaceId.value = previousPlace.id;
+}
+
+const { handleTouchStart, handleTouchEnd } = useDirectionalNavigation({
+  next: nextSavedPlace,
+  previous: previousSavedPlace,
+  isActive: () => Boolean(selectedPlaceId.value),
+});
 
 // Starts Google sign-in from the signed-out empty state.
 async function signIn() {
@@ -231,7 +293,16 @@ async function signIn() {
 .place-overlay-actions {
   display: flex;
   justify-content: center;
+  gap: 32px;
   margin-top: 12px;
+}
+
+.place-overlay-actions :deep(.v-btn) {
+  width: 52px;
+  height: 52px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .filter-fab {

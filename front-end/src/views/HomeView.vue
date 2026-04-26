@@ -47,23 +47,6 @@
     />
 
     <FilterFab v-model="filterDialog" :store="placesStore" />
-
-    <v-dialog v-model="showLogoutDialog" max-width="400">
-      <v-card rounded="xl">
-        <v-card-title class="text-h6">
-          Success
-        </v-card-title>
-        <v-card-text>
-          You've been logged out
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn color="primary" @click="showLogoutDialog = false">
-            OK
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
   </div>
 </template>
 
@@ -72,16 +55,15 @@ import { computed, ref, watch } from "vue";
 import FilterFab from "../components/FilterFab.vue";
 import PlaceCard from "../components/PlaceCard.vue";
 import { usePlacesStore } from "../stores/placesStore";
-import { useAuthStore } from "../stores/authStore";
 
-const auth = useAuthStore();
 const placesStore = usePlacesStore();
 
 const slideDirection = ref("slide-left");
 const currentIndex = ref(0);
 const filterDialog = ref(false);
-const showLogoutDialog = ref(false);
+const hasPickedInitialPlace = ref(false);
 
+// Shows the place at the current index from the filtered approved list.
 const currentPlace = computed(() => {
   const places = placesStore.filteredPlaces;
 
@@ -90,11 +72,19 @@ const currentPlace = computed(() => {
   return places[currentIndex.value] ?? null;
 });
 
+// Keeps the selected index valid when filters or place data change.
 watch(
   () => placesStore.filteredPlaces,
   (places) => {
     if (places.length === 0) {
       currentIndex.value = 0;
+      hasPickedInitialPlace.value = false;
+      return;
+    }
+
+    if (!hasPickedInitialPlace.value) {
+      currentIndex.value = Math.floor(Math.random() * places.length);
+      hasPickedInitialPlace.value = true;
       return;
     }
 
@@ -105,15 +95,7 @@ watch(
   { immediate: true },
 );
 
-watch(
-  () => auth.user,
-  (newUser, oldUser) => {
-    if (!newUser && oldUser) {
-      showLogoutDialog.value = true;
-    }
-  },
-);
-
+// Moves to the next filtered place and wraps back to the start.
 function nextPlace() {
   const places = placesStore.filteredPlaces;
   if (places.length === 0) return;
@@ -122,6 +104,7 @@ function nextPlace() {
   currentIndex.value = (currentIndex.value + 1) % places.length;
 }
 
+// Moves to the previous filtered place and wraps to the end.
 function previousPlace() {
   const places = placesStore.filteredPlaces;
   if (places.length === 0) return;
@@ -165,35 +148,34 @@ function previousPlace() {
 .filter-fab {
   position: fixed;
   bottom: 24px;
-  right: max(16px, calc((100vw - 640px) / 2 + 25px));
+  right: max(16px, calc((100vw - 640px) / 2 + 16px));
   z-index: 1200;
   width: 56px;
   height: 56px;
   border-radius: 18px;
-  background: rgba(47, 93, 159, 0.12);
-  color: rgba(47, 93, 159, 0.72);
-  box-shadow: none;
-  opacity: 0.38;
+  background: rgba(255, 255, 255, 0.72);
+  color: rgb(47, 93, 159);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 24px rgba(31, 45, 61, 0.08);
   transition:
     background-color 0.2s ease,
     color 0.2s ease,
-    opacity 0.2s ease,
     transform 0.2s ease,
     box-shadow 0.2s ease;
 }
 
 .filter-fab:hover {
-  background: rgb(47, 93, 159);
-  color: #ffffff;
-  opacity: 1;
+  background: rgba(255, 255, 255, 0.9);
+  color: rgb(47, 93, 159);
   transform: translateY(-2px);
   box-shadow: 0 12px 30px rgba(47, 93, 159, 0.25);
 }
 
 .filter-fab:focus-visible {
-  background: rgb(47, 93, 159);
-  color: #ffffff;
-  opacity: 1;
+  background: rgba(255, 255, 255, 0.9);
+  color: rgb(47, 93, 159);
 }
 
 .filter-fab:active {
@@ -236,7 +218,6 @@ function previousPlace() {
     width: 52px;
     height: 52px;
     border-radius: 16px;
-    opacity: 0.88;
   }
 }
 </style>

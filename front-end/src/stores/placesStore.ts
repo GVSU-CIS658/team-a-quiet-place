@@ -1,5 +1,10 @@
 import { defineStore } from "pinia";
-import type { Place, LocationType, ApprovalStatus } from "../types/data";
+import type {
+  ApprovalStatus,
+  LocationType,
+  Place,
+  PlaceFilters,
+} from "../types/data";
 import {
   onSnapshot,
   collection,
@@ -16,11 +21,6 @@ type CreatePlaceInput = {
   description: string;
   images: string[];
   tags: string[];
-};
-
-type Filters = {
-  location: LocationType | null;
-  rating: number | null;
 };
 
 const functions = getFunctions();
@@ -48,6 +48,9 @@ export const usePlacesStore = defineStore("places", {
       return state.places.filter((place) => place.approvalStatus === "pending");
     },
 
+    // filteredPlaces updates automatically, when filter location and rating changes, 
+    // or when the list of approved places changes. 
+    // It returns the list of approved places that match the current filters.
     filteredPlaces(): Place[] {
       return this.approvedPlaces.filter((place) => {
         const locationMatch =
@@ -78,7 +81,7 @@ export const usePlacesStore = defineStore("places", {
   },
 
   actions: {
-    updateFilters(partial: Partial<Filters>) {
+    updateFilters(partial: Partial<PlaceFilters>) {
       this.filters = {
         ...this.filters,
         ...partial,

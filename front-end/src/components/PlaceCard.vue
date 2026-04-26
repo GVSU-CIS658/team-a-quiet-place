@@ -59,23 +59,21 @@
         </button>
       </div>
 
-      <div class="d-flex align-center ga-3 mb-4 flex-wrap">
-        <div class="d-flex align-center ga-2">
-          <v-rating
-            :model-value="place.rating"
-            half-increments
-            readonly
-            density="compact"
-            color="primary"
-            size="small"
-          />
-          <span class="text-body-2 font-weight-medium">
-            {{ place.rating }}
-          </span>
-          <span class="text-body-2 text-medium-emphasis">
-            ({{ place.reviews }} reviews)
-          </span>
-        </div>
+      <div class="d-flex align-center ga-2 mb-4 flex-wrap">
+        <v-rating
+          :model-value="place.rating"
+          half-increments
+          readonly
+          density="compact"
+          color="primary"
+          size="small"
+        />
+        <span class="text-body-2 font-weight-medium">
+          {{ place.rating }}
+        </span>
+        <span class="text-body-2 text-medium-emphasis">
+          ({{ place.reviews }} reviews)
+        </span>
       </div>
 
       <div class="d-flex flex-wrap ga-2 mb-5">

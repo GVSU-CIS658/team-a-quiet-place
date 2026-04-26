@@ -15,9 +15,40 @@ const adminStore = useAdminStore();
 const placesStore = usePlacesStore();
 const savedPlacesStore = useSavedPlacesStore();
 
+// Maps route names to the labels shown in the breadcrumb trail.
+const pageTitleMap: Record<string, string> = {
+  home: "Home",
+  saved: "Saved Places",
+  "add-place": "Add a Place",
+  "admin-review": "Admin Review",
+  "admin-dashboard": "Admin Dashboard",
+};
+
 const isWideLayout = computed(() => route.meta.layout === "wide");
 const isAdminRoute = computed(() => String(route.name ?? "").startsWith("admin"));
 
+// Looks up the current route's human-readable page title.
+const currentPageTitle = computed(() => {
+  const routeName = String(route.name ?? "");
+
+  return pageTitleMap[routeName] ?? "Home";
+});
+
+// Builds the Vuetify breadcrumb items for the current route.
+const breadcrumbs = computed(() => {
+  if (route.name === "home") {
+    return [{ title: "Home", disabled: true }];
+  }
+
+  return [
+    { title: "Home", to: { name: "home" } },
+    { title: currentPageTitle.value, disabled: true },
+  ];
+});
+
+// Decides what places Firestore listener should be active:
+// - normal users should only listen to approved places
+// - admins should listen to all places when they are unlocked.
 function syncPlaceReadMode() {
   if (isAdminRoute.value && adminStore.isUnlocked) {
     placesStore.readPlaces("all");
@@ -28,6 +59,7 @@ function syncPlaceReadMode() {
 }
 
 watch(
+  // watch the user login/logout to start/stop reading their saved places
   () => authStore.user,
   (user) => {
     savedPlacesStore.stopReading();
@@ -41,6 +73,7 @@ watch(
 );
 
 watch(
+  // watch the route and admin store states to determine which places to read
   [() => route.name, () => adminStore.isUnlocked, () => adminStore.isChecking],
   () => {
     if (isAdminRoute.value && adminStore.isChecking) return;
@@ -57,7 +90,6 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="app-shell">
-    <!-- <AppDrawer :model-value="drawerOpen" @update:model-value="drawerOpen = $event" /> -->
     <AppDrawer v-model="drawer" />
 
     <v-main class="main-area">
@@ -80,6 +112,16 @@ onBeforeUnmount(() => {
 
           <div class="top-bar-spacer" />
         </header>
+
+        <v-breadcrumbs
+          :items="breadcrumbs"
+          density="compact"
+          class="breadcrumbs"
+        >
+          <template #divider>
+            <v-icon icon="mdi-chevron-right" size="small" />
+          </template>
+        </v-breadcrumbs>
 
         <section :class="['page-content', { 'page-content-wide': isWideLayout }]">
           <router-view />
@@ -158,6 +200,22 @@ onBeforeUnmount(() => {
   font-size: 0.92rem;
   line-height: 1.35;
   color: #6b7280;
+}
+
+.breadcrumbs {
+  padding: 0 4px 12px;
+  color: #6b7280;
+  font-size: 0.86rem;
+}
+
+.breadcrumbs :deep(.v-breadcrumbs-item) {
+  color: inherit;
+}
+
+.breadcrumbs :deep(.v-breadcrumbs-item--disabled) {
+  color: #1f2d3d;
+  opacity: 1;
+  font-weight: 600;
 }
 
 .page-content {

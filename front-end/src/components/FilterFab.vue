@@ -27,13 +27,6 @@
             class="top-icon-btn"
             @click="emit('update:modelValue', false)"
           />
-          <v-btn
-            icon="mdi-content-save-outline"
-            variant="text"
-            size="small"
-            class="top-icon-btn save-btn"
-            @click="emit('update:modelValue', false)"
-          />
         </div>
       </div>
 
@@ -51,7 +44,6 @@
           class="field-spacing"
         />
 
-        <!-- ✅ RATING -->
         <v-select
           v-model="store.filters.rating"
           :items="ratingOptions"
@@ -69,13 +61,10 @@
 </template>
 
 <script setup lang="ts">
-import { type LocationType } from "../types/data";
+import { type LocationType, type PlaceFilters } from "../types/data";
 
 type FilterStore = {
-  filters: {
-    location: LocationType | null;
-    rating: number | null;
-  };
+  filters: PlaceFilters;
   resetFilters: () => void;
 };
 
@@ -88,7 +77,7 @@ const emit = defineEmits<{
   (e: "update:modelValue", value: boolean): void;
 }>();
 
-// ✅ dropdown options
+// move to Firestore in the future
 const locationOptions: LocationType[] = ["Valley", "Pew", "Health"];
 
 const ratingOptions = [1, 2, 3, 4, 5];
@@ -154,11 +143,6 @@ const ratingOptions = [1, 2, 3, 4, 5];
 
 .top-icon-btn:focus-visible {
   background: rgba(47, 93, 159, 0.12);
-  color: rgb(47, 93, 159);
-}
-
-.save-btn:hover {
-  background: rgba(47, 93, 159, 0.14);
   color: rgb(47, 93, 159);
 }
 

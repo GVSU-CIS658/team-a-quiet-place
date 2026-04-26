@@ -27,6 +27,7 @@
             @click="goTo('home')"
           />
 
+          <!-- Saved Places is available after login -->
           <v-list-item
             v-if="isLoggedIn"
             prepend-icon="mdi-heart-outline"
@@ -36,6 +37,7 @@
             @click="goTo('saved')"
           />
 
+          <!-- Add a Place is available after login -->
           <v-list-item
             v-if="isLoggedIn"
             prepend-icon="mdi-plus-circle-outline"
@@ -45,6 +47,7 @@
             @click="goTo('add-place')"
           />
 
+          <!-- Admin Review is available for admins only -->
           <v-list-item
             v-if="isAdmin"
             prepend-icon="mdi-shield-check-outline"
@@ -54,6 +57,7 @@
             @click="goTo('admin-review')"
           />
 
+          <!-- Admin Dashboard is available for admins only -->
           <v-list-item
             v-if="isAdmin"
             prepend-icon="mdi-view-dashboard-outline"
@@ -103,10 +107,13 @@ import { useRouter } from "vue-router";
 import { useAdminStore } from "../stores/adminStore";
 import { useAuthStore } from "../stores/authStore";
 
+// "open or closed" state from MainLayout.vue
 defineProps<{
   modelValue: boolean;
 }>();
 
+// When moving to a new page, we want to close the drawer
+// child components can communicate with parent components using emits
 const emit = defineEmits<{
   (e: "update:modelValue", value: boolean): void;
 }>();
@@ -128,17 +135,11 @@ function goTo(name: string) {
 }
 
 const handleLogin = () => {
-  auth.signInWithGoogle()
-    .then(() => {
-      console.log("Logged in");
-    });
+  auth.signInWithGoogle();
 };
 
 const handleLogout = () => {
-  auth.logout()
-    .then(() => {
-      console.log("Logged out");
-    });
+  auth.logout();
 };
 </script>
 
@@ -156,18 +157,6 @@ const handleLogout = () => {
   align-items: flex-start;
   gap: 14px;
   padding: 22px 20px 18px;
-}
-
-.drawer-badge {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(47, 93, 159, 0.08);
-  color: rgb(47, 93, 159);
-  flex-shrink: 0;
 }
 
 .drawer-title {

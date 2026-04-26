@@ -1,68 +1,83 @@
 <template>
   <div class="saved-page">
-    <div v-if="filteredSavedPlaces.length > 0" class="saved-grid-wrap">
-      <div class="saved-grid">
-        <v-card
-          v-for="place in filteredSavedPlaces"
-          :key="place.id"
-          class="saved-tile"
-          rounded="xl"
-          elevation="2"
-          @click="openPlace(place.id)"
-        >
-          <v-img
-            :src="place.images[0]"
-            :alt="place.name"
-            height="220"
-            cover
-            class="saved-tile-image"
-          />
-
-          <div class="saved-tile-overlay">
-            <div class="saved-tile-title">{{ place.name }}</div>
-            <div class="saved-tile-location">{{ place.location }}</div>
-          </div>
-        </v-card>
-      </div>
-    </div>
-
-    <div v-else class="empty-state">
+    <div v-if="!auth.user" class="empty-state">
       <v-card rounded="xl" elevation="2" class="pa-8 text-center">
-        <div class="text-h6 font-weight-bold mb-2">No saved places yet</div>
+        <div class="text-h6 font-weight-bold mb-2">Sign in required</div>
         <div class="text-body-2 text-medium-emphasis mb-4">
-          Save a place from the home page and it will show up here.
+          Sign in first to view your saved places.
         </div>
 
-        <v-btn color="primary" rounded="xl" :to="{ name: 'home' }">
-          Browse places
+        <v-btn color="primary" rounded="xl" @click="signIn">
+          Sign in with Google
         </v-btn>
       </v-card>
     </div>
 
-    <transition name="overlay-fade">
-      <div v-if="selectedPlace" class="place-overlay" @click="closePlace">
-        <div class="place-overlay-content" @click.stop>
-          <PlaceCard :place="selectedPlace" />
-          <div class="place-overlay-actions">
-            <v-btn
-              icon="mdi-close"
-              variant="text"
-              color="white"
-              @click="closePlace"
+    <template v-else>
+      <div v-if="filteredSavedPlaces.length > 0" class="saved-grid-wrap">
+        <div class="saved-grid">
+          <v-card
+            v-for="place in filteredSavedPlaces"
+            :key="place.id"
+            class="saved-tile"
+            rounded="xl"
+            elevation="2"
+            @click="openPlace(place.id)"
+          >
+            <v-img
+              :src="place.images[0]"
+              :alt="place.name"
+              height="220"
+              cover
+              class="saved-tile-image"
             />
-          </div>
+
+            <div class="saved-tile-overlay">
+              <div class="saved-tile-title">{{ place.name }}</div>
+              <div class="saved-tile-location">{{ place.location }}</div>
+            </div>
+          </v-card>
         </div>
       </div>
-    </transition>
 
-    <v-btn
-      class="filter-fab"
-      icon="mdi-tune-variant"
-      variant="flat"
-      @click="filterDialog = true"
-    />
+      <div v-else class="empty-state">
+        <v-card rounded="xl" elevation="2" class="pa-8 text-center">
+          <div class="text-h6 font-weight-bold mb-2">No saved places yet</div>
+          <div class="text-body-2 text-medium-emphasis mb-4">
+            Save a place from the home page and it will show up here.
+          </div>
 
-    <FilterFab v-model="filterDialog" :store="savedPlacesStore" />
+          <v-btn color="primary" rounded="xl" :to="{ name: 'home' }">
+            Browse places
+          </v-btn>
+        </v-card>
+      </div>
+
+      <transition name="overlay-fade">
+        <div v-if="selectedPlace" class="place-overlay" @click="closePlace">
+          <div class="place-overlay-content" @click.stop>
+            <PlaceCard :place="selectedPlace" />
+            <div class="place-overlay-actions">
+              <v-btn
+                icon="mdi-close"
+                variant="text"
+                color="white"
+                @click="closePlace"
+              />
+            </div>
+          </div>
+        </div>
+      </transition>
+
+      <v-btn
+        class="filter-fab"
+        icon="mdi-tune-variant"
+        variant="flat"
+        @click="filterDialog = true"
+      />
+
+      <FilterFab v-model="filterDialog" :store="savedPlacesStore" />
+    </template>
   </div>
 </template>
 
@@ -70,17 +85,21 @@
 import { computed, ref, watch } from "vue";
 import FilterFab from "../components/FilterFab.vue";
 import PlaceCard from "../components/PlaceCard.vue";
+import { useAuthStore } from "../stores/authStore";
 import { useSavedPlacesStore } from "../stores/savedPlacesStore";
 
+const auth = useAuthStore();
 const savedPlacesStore = useSavedPlacesStore();
 
 const filterDialog = ref(false);
 const selectedPlaceId = ref<string | null>(null);
 
+// Reads the saved places after applying the current saved-place filters.
 const filteredSavedPlaces = computed(() => {
   return savedPlacesStore.filteredSavedPlaces;
 });
 
+// Finds the full place object for the saved tile currently open in the overlay.
 const selectedPlace = computed(() => {
   if (!selectedPlaceId.value) return null;
 
@@ -91,6 +110,7 @@ const selectedPlace = computed(() => {
   );
 });
 
+// Closes the overlay if filtering or data changes remove the selected place.
 watch(
   filteredSavedPlaces,
   (places) => {
@@ -104,12 +124,23 @@ watch(
   { immediate: true },
 );
 
+// Opens the full PlaceCard overlay for the selected saved place.
 function openPlace(placeId: string) {
   selectedPlaceId.value = placeId;
 }
 
+// Closes the saved-place overlay.
 function closePlace() {
   selectedPlaceId.value = null;
+}
+
+// Starts Google sign-in from the signed-out empty state.
+async function signIn() {
+  try {
+    await auth.signInWithGoogle();
+  } catch (error) {
+    console.error("Google sign-in failed:", error);
+  }
 }
 </script>
 
@@ -206,35 +237,34 @@ function closePlace() {
 .filter-fab {
   position: fixed;
   bottom: 24px;
-  right: max(16px, calc((100vw - 640px) / 2 + 25px));
+  right: max(16px, calc((100vw - 640px) / 2 + 16px));
   z-index: 1200;
   width: 56px;
   height: 56px;
   border-radius: 18px;
-  background: rgba(47, 93, 159, 0.12);
-  color: rgba(47, 93, 159, 0.72);
-  box-shadow: none;
-  opacity: 0.38;
+  background: rgba(255, 255, 255, 0.72);
+  color: rgb(47, 93, 159);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 24px rgba(31, 45, 61, 0.08);
   transition:
     background-color 0.2s ease,
     color 0.2s ease,
-    opacity 0.2s ease,
     transform 0.2s ease,
     box-shadow 0.2s ease;
 }
 
 .filter-fab:hover {
-  background: rgb(47, 93, 159);
-  color: #ffffff;
-  opacity: 1;
+  background: rgba(255, 255, 255, 0.9);
+  color: rgb(47, 93, 159);
   transform: translateY(-2px);
   box-shadow: 0 12px 30px rgba(47, 93, 159, 0.25);
 }
 
 .filter-fab:focus-visible {
-  background: rgb(47, 93, 159);
-  color: #ffffff;
-  opacity: 1;
+  background: rgba(255, 255, 255, 0.9);
+  color: rgb(47, 93, 159);
 }
 
 .filter-fab:active {
@@ -275,7 +305,6 @@ function closePlace() {
     width: 52px;
     height: 52px;
     border-radius: 16px;
-    opacity: 0.88;
   }
 }
 </style>

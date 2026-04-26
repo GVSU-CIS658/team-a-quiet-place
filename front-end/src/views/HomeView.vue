@@ -154,11 +154,11 @@ function previousPlace() {
   height: 56px;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.72);
-  color: rgb(47, 93, 159);
+  color: rgb(0, 50, 160);
   border: 1px solid rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 8px 24px rgba(31, 45, 61, 0.08);
+  box-shadow: 0 8px 24px rgba(19, 21, 92, 0.08);
   transition:
     background-color 0.2s ease,
     color 0.2s ease,
@@ -168,14 +168,14 @@ function previousPlace() {
 
 .filter-fab:hover {
   background: rgba(255, 255, 255, 0.9);
-  color: rgb(47, 93, 159);
+  color: rgb(0, 50, 160);
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(47, 93, 159, 0.25);
+  box-shadow: 0 12px 30px rgba(0, 50, 160, 0.25);
 }
 
 .filter-fab:focus-visible {
   background: rgba(255, 255, 255, 0.9);
-  color: rgb(47, 93, 159);
+  color: rgb(0, 50, 160);
 }
 
 .filter-fab:active {

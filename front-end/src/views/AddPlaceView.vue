@@ -577,7 +577,7 @@ onBeforeUnmount(() => {
 }
 
 .place-image {
-  background: linear-gradient(180deg, #eef3f8 0%, #dfe8f2 100%);
+  background: linear-gradient(180deg, #EEF4FF 0%, #D9E6FF 100%);
 }
 
 .image-placeholder {
@@ -589,8 +589,8 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  background: linear-gradient(180deg, #eef3f8 0%, #dfe8f2 100%);
-  color: #2f5d9f;
+  background: linear-gradient(180deg, #EEF4FF 0%, #D9E6FF 100%);
+  color: #0032A0;
   cursor: pointer;
   font: inherit;
   font-weight: 700;
@@ -640,11 +640,11 @@ onBeforeUnmount(() => {
   padding-bottom: 0;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #1f2d3d;
+  color: #13155C;
 }
 
 .location-pill-select :deep(.v-select__selection) {
-  color: #1f2d3d;
+  color: #13155C;
 }
 
 .location-pill-select :deep(.v-field__append-inner) {
@@ -665,7 +665,7 @@ onBeforeUnmount(() => {
 }
 
 .image-counter {
-  background: rgba(31, 45, 61, 0.72);
+  background: rgba(19, 21, 92, 0.72);
   color: white;
   font-size: 0.8rem;
   font-weight: 600;
@@ -710,7 +710,7 @@ onBeforeUnmount(() => {
   font-size: 1.5rem;
   font-weight: 700;
   line-height: 1.3;
-  color: #1f2d3d;
+  color: #13155C;
 }
 
 .editable-description {
@@ -738,7 +738,7 @@ onBeforeUnmount(() => {
 }
 
 .editable-hover:hover {
-  background: rgba(47, 93, 159, 0.06);
+  background: rgba(0, 50, 160, 0.06);
 }
 
 .tag-input-wrap {
@@ -748,7 +748,7 @@ onBeforeUnmount(() => {
 
 .tag-input {
   border-radius: 8px;
-  background: rgba(47, 93, 159, 0.1);
+  background: rgba(0, 50, 160, 0.1);
 }
 
 .tag-input :deep(.v-field) {
@@ -759,16 +759,16 @@ onBeforeUnmount(() => {
   min-height: 28px;
   padding: 0;
   font-size: 0.8125rem;
-  color: rgb(47, 93, 159);
+  color: rgb(0, 50, 160);
 }
 
 .tag-input :deep(input::placeholder) {
-  color: rgba(47, 93, 159, 0.72);
+  color: rgba(0, 50, 160, 0.72);
   opacity: 1;
 }
 
 .first-review-card {
-  background: #fbfcfe;
+  background: #F8FBFF;
 }
 
 .actions-row {
@@ -781,7 +781,7 @@ onBeforeUnmount(() => {
 
 .submit-note {
   flex: 1;
-  color: #6b7280;
+  color: #4F638C;
   font-size: 0.9rem;
   line-height: 1.45;
 }
@@ -797,11 +797,11 @@ onBeforeUnmount(() => {
 }
 
 .approve-btn {
-  box-shadow: 0 12px 30px rgba(47, 93, 159, 0.22);
+  box-shadow: 0 12px 30px rgba(0, 50, 160, 0.22);
 }
 
 .reject-btn {
-  color: #9b1c1c;
+  color: #9B1C1C;
   border-color: rgba(155, 28, 28, 0.22);
   background: rgba(155, 28, 28, 0.04);
 }

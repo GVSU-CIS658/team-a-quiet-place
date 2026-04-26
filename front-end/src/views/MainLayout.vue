@@ -134,7 +134,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .app-shell {
   min-height: 100vh;
-  background: linear-gradient(to bottom, #f7f9fc, #eef3f9);
+  background: linear-gradient(to bottom, #F7FAFF, #EEF4FF);
 }
 
 .main-area {
@@ -168,7 +168,7 @@ onBeforeUnmount(() => {
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: 20px;
-  box-shadow: 0 8px 24px rgba(31, 45, 61, 0.08);
+  box-shadow: 0 8px 24px rgba(19, 21, 92, 0.08);
 }
 
 .menu-btn {
@@ -192,19 +192,19 @@ onBeforeUnmount(() => {
   font-size: 1.25rem;
   font-weight: 700;
   line-height: 1.2;
-  color: #1f2d3d;
+  color: #13155C;
 }
 
 .app-subtitle {
   margin-top: 4px;
   font-size: 0.92rem;
   line-height: 1.35;
-  color: #6b7280;
+  color: #4F638C;
 }
 
 .breadcrumbs {
   padding: 0 4px 12px;
-  color: #6b7280;
+  color: #4F638C;
   font-size: 0.86rem;
 }
 
@@ -213,7 +213,7 @@ onBeforeUnmount(() => {
 }
 
 .breadcrumbs :deep(.v-breadcrumbs-item--disabled) {
-  color: #1f2d3d;
+  color: #13155C;
   opacity: 1;
   font-weight: 600;
 }

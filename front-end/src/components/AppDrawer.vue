@@ -30,7 +30,7 @@
           <!-- Saved Places is available after login -->
           <v-list-item
             v-if="isLoggedIn"
-            prepend-icon="mdi-heart-outline"
+            prepend-icon="mdi-heart"
             title="Saved Places"
             rounded="xl"
             class="drawer-item"
@@ -163,14 +163,14 @@ const handleLogout = () => {
   font-size: 1.05rem;
   font-weight: 700;
   line-height: 1.2;
-  color: #172033;
+  color: #13155C;
 }
 
 .drawer-subtitle {
   margin-top: 4px;
   font-size: 0.9rem;
   line-height: 1.4;
-  color: #6b7280;
+  color: #4F638C;
 }
 
 .drawer-list {

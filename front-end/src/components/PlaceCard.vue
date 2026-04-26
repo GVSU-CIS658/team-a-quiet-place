@@ -198,7 +198,7 @@ async function toggleSaved() {
 }
 
 .place-image {
-  background: linear-gradient(180deg, #eef3f8 0%, #dfe8f2 100%);
+  background: linear-gradient(180deg, #EEF4FF 0%, #D9E6FF 100%);
 }
 
 .image-overlay {
@@ -222,7 +222,7 @@ async function toggleSaved() {
 
 .location-pill {
   background: rgba(255, 255, 255, 0.92);
-  color: #1f2d3d;
+  color: #13155C;
   font-size: 0.85rem;
   font-weight: 600;
   padding: 8px 12px;
@@ -230,7 +230,7 @@ async function toggleSaved() {
 }
 
 .image-counter {
-  background: rgba(31, 45, 61, 0.72);
+  background: rgba(19, 21, 92, 0.72);
   color: white;
   font-size: 0.8rem;
   font-weight: 600;
@@ -252,7 +252,7 @@ async function toggleSaved() {
 .load-more-btn {
   border: none;
   background: transparent;
-  color: #2f5d9f;
+  color: #0032A0;
   font-weight: 600;
   cursor: pointer;
   padding: 0;
@@ -277,9 +277,9 @@ async function toggleSaved() {
 .place-carousel :deep(.v-btn.v-window__left),
 .place-carousel :deep(.v-btn.v-window__right) {
   background: rgba(255, 255, 255, 0.72);
-  color: #1f2d3d;
+  color: #13155C;
   backdrop-filter: blur(8px);
-  box-shadow: 0 4px 14px rgba(31, 45, 61, 0.12);
+  box-shadow: 0 4px 14px rgba(19, 21, 92, 0.12);
   transition:
     background-color 0.2s ease,
     transform 0.2s ease,
@@ -291,7 +291,7 @@ async function toggleSaved() {
 .place-carousel :deep(.v-btn.v-window__right:hover) {
   background: rgba(255, 255, 255, 0.9);
   transform: scale(1.04);
-  box-shadow: 0 8px 22px rgba(31, 45, 61, 0.16);
+  box-shadow: 0 8px 22px rgba(19, 21, 92, 0.16);
 }
 
 .place-carousel :deep(.v-carousel__controls) {

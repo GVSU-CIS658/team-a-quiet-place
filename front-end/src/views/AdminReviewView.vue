@@ -157,11 +157,11 @@ async function reviewPlace(approvalStatus: ApprovalStatus) {
 }
 
 .approve-btn {
-  box-shadow: 0 12px 30px rgba(47, 93, 159, 0.22);
+  box-shadow: 0 12px 30px rgba(0, 50, 160, 0.22);
 }
 
 .reject-btn {
-  color: #9b1c1c;
+  color: #9B1C1C;
   border-color: rgba(155, 28, 28, 0.22);
   background: rgba(155, 28, 28, 0.04);
 }

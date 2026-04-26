@@ -390,21 +390,21 @@ function formatCreatedAt(createdAt?: number) {
 
 .stat-label {
   font-size: 0.88rem;
-  color: #6b7280;
+  color: #4F638C;
 }
 
 .stat-value {
   margin-top: 8px;
   font-size: 1.7rem;
   font-weight: 700;
-  color: #172033;
+  color: #13155C;
 }
 
 .dashboard-card {
   overflow: hidden;
   background: rgba(255, 255, 255, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow: 0 22px 50px rgba(31, 45, 61, 0.08);
+  box-shadow: 0 22px 50px rgba(19, 21, 92, 0.08);
 }
 
 .dashboard-toolbar {
@@ -422,13 +422,13 @@ function formatCreatedAt(createdAt?: number) {
 .toolbar-title {
   font-size: 1.08rem;
   font-weight: 700;
-  color: #172033;
+  color: #13155C;
 }
 
 .toolbar-subtitle {
   margin-top: 6px;
   line-height: 1.5;
-  color: #6b7280;
+  color: #4F638C;
 }
 
 .table-wrap {
@@ -453,7 +453,7 @@ function formatCreatedAt(createdAt?: number) {
 }
 
 .sort-header:hover {
-  color: rgb(47, 93, 159);
+  color: rgb(0, 50, 160);
 }
 
 .place-cell {
@@ -472,7 +472,7 @@ function formatCreatedAt(createdAt?: number) {
   height: 68px;
   object-fit: cover;
   border-radius: 14px;
-  background: #eef3f9;
+  background: #EEF4FF;
 }
 
 .place-copy {
@@ -481,14 +481,14 @@ function formatCreatedAt(createdAt?: number) {
 
 .place-name {
   font-weight: 700;
-  color: #172033;
+  color: #13155C;
 }
 
 .place-meta {
   margin-top: 4px;
   font-size: 0.88rem;
   line-height: 1.4;
-  color: #6b7280;
+  color: #4F638C;
 }
 
 .action-buttons {
@@ -505,7 +505,7 @@ function formatCreatedAt(createdAt?: number) {
 .empty-row {
   text-align: center;
   padding: 26px 12px;
-  color: #6b7280;
+  color: #4F638C;
 }
 
 .empty-state {

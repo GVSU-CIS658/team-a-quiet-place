@@ -208,7 +208,7 @@ function formatReviewDate(dateValue: number) {
 
 .review-form-card,
 .review-item {
-  background: #fbfcfe;
+  background: #F8FBFF;
 }
 
 .review-form-actions {
@@ -236,18 +236,18 @@ function formatReviewDate(dateValue: number) {
 .review-user {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #1f2d3d;
+  color: #13155C;
 }
 
 .review-date {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: #4F638C;
   margin-top: 2px;
 }
 
 .empty-review-text {
   text-align: center;
-  color: #6b7280;
+  color: #4F638C;
   font-size: 0.92rem;
   padding: 12px 0;
 }

@@ -27,13 +27,6 @@
             class="top-icon-btn"
             @click="emit('update:modelValue', false)"
           />
-          <v-btn
-            icon="mdi-content-save-outline"
-            variant="text"
-            size="small"
-            class="top-icon-btn save-btn"
-            @click="emit('update:modelValue', false)"
-          />
         </div>
       </div>
 
@@ -51,7 +44,6 @@
           class="field-spacing"
         />
 
-        <!-- ✅ RATING -->
         <v-select
           v-model="store.filters.rating"
           :items="ratingOptions"
@@ -69,13 +61,10 @@
 </template>
 
 <script setup lang="ts">
-import { type LocationType } from "../types/data";
+import { type LocationType, type PlaceFilters } from "../types/data";
 
 type FilterStore = {
-  filters: {
-    location: LocationType | null;
-    rating: number | null;
-  };
+  filters: PlaceFilters;
   resetFilters: () => void;
 };
 
@@ -88,7 +77,7 @@ const emit = defineEmits<{
   (e: "update:modelValue", value: boolean): void;
 }>();
 
-// ✅ dropdown options
+// move to Firestore in the future
 const locationOptions: LocationType[] = ["Valley", "Pew", "Health"];
 
 const ratingOptions = [1, 2, 3, 4, 5];
@@ -97,8 +86,8 @@ const ratingOptions = [1, 2, 3, 4, 5];
 <style scoped>
 .filter-card {
   overflow: hidden;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(19, 21, 92, 0.06);
+  box-shadow: 0 20px 50px rgba(19, 21, 92, 0.12);
   background: #ffffff;
 }
 
@@ -118,14 +107,14 @@ const ratingOptions = [1, 2, 3, 4, 5];
   font-size: 1.05rem;
   font-weight: 700;
   line-height: 1.2;
-  color: #172033;
+  color: #13155C;
 }
 
 .filter-subtitle {
   margin-top: 4px;
   font-size: 0.9rem;
   line-height: 1.4;
-  color: #6b7280;
+  color: #4F638C;
 }
 
 .filter-top-actions {
@@ -138,7 +127,7 @@ const ratingOptions = [1, 2, 3, 4, 5];
 .top-icon-btn {
   border-radius: 12px;
   background: transparent;
-  color: rgba(23, 32, 51, 0.52);
+  color: rgba(19, 21, 92, 0.52);
   box-shadow: none;
   transition:
     background-color 0.18s ease,
@@ -147,19 +136,14 @@ const ratingOptions = [1, 2, 3, 4, 5];
 }
 
 .top-icon-btn:hover {
-  background: rgba(47, 93, 159, 0.1);
-  color: rgb(47, 93, 159);
+  background: rgba(0, 50, 160, 0.1);
+  color: rgb(0, 50, 160);
   transform: translateY(-1px);
 }
 
 .top-icon-btn:focus-visible {
-  background: rgba(47, 93, 159, 0.12);
-  color: rgb(47, 93, 159);
-}
-
-.save-btn:hover {
-  background: rgba(47, 93, 159, 0.14);
-  color: rgb(47, 93, 159);
+  background: rgba(0, 50, 160, 0.12);
+  color: rgb(0, 50, 160);
 }
 
 .filter-body {

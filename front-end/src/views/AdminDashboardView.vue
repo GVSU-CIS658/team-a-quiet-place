@@ -64,41 +64,48 @@
             </div>
           </div>
 
-          <div class="toolbar-actions">
-            <v-text-field
-              v-model="searchText"
-              label="Search places"
-              variant="outlined"
-              rounded="lg"
-              density="comfortable"
-              hide-details
-              prepend-inner-icon="mdi-magnify"
-              class="search-field"
-            />
-
-            <v-select
-              v-model="statusFilter"
-              :items="statusOptions"
-              label="Status"
-              variant="outlined"
-              rounded="lg"
-              density="comfortable"
-              hide-details
-              class="status-field"
-            />
-          </div>
         </div>
 
         <div class="table-wrap">
           <v-table class="admin-table">
             <thead>
               <tr>
-                <th>Place</th>
-                <th>Status</th>
-                <th>Rating</th>
-                <th>Reviews</th>
-                <th>Creator</th>
-                <th>Created</th>
+                <th>
+                  <button class="sort-header" type="button" @click="setSort('name')">
+                    Place
+                    <v-icon :icon="sortIcon('name')" size="small" />
+                  </button>
+                </th>
+                <th>
+                  <button class="sort-header" type="button" @click="setSort('status')">
+                    Status
+                    <v-icon :icon="sortIcon('status')" size="small" />
+                  </button>
+                </th>
+                <th>
+                  <button class="sort-header" type="button" @click="setSort('rating')">
+                    Rating
+                    <v-icon :icon="sortIcon('rating')" size="small" />
+                  </button>
+                </th>
+                <th>
+                  <button class="sort-header" type="button" @click="setSort('reviews')">
+                    Reviews
+                    <v-icon :icon="sortIcon('reviews')" size="small" />
+                  </button>
+                </th>
+                <th>
+                  <button class="sort-header" type="button" @click="setSort('creator')">
+                    Creator
+                    <v-icon :icon="sortIcon('creator')" size="small" />
+                  </button>
+                </th>
+                <th>
+                  <button class="sort-header" type="button" @click="setSort('createdAt')">
+                    Created
+                    <v-icon :icon="sortIcon('createdAt')" size="small" />
+                  </button>
+                </th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -140,36 +147,33 @@
                   <div class="action-buttons">
                     <v-btn
                       size="small"
+                      icon="mdi-check"
                       rounded="lg"
                       variant="tonal"
                       color="primary"
                       :disabled="place.approvalStatus === 'approved' || placesStore.isSubmitting"
                       @click="setPlaceStatus(place.id, 'approved')"
-                    >
-                      Allow
-                    </v-btn>
+                    />
 
                     <v-btn
                       size="small"
+                      icon="mdi-close"
                       rounded="lg"
                       variant="tonal"
                       color="error"
                       :disabled="place.approvalStatus === 'rejected' || placesStore.isSubmitting"
                       @click="setPlaceStatus(place.id, 'rejected')"
-                    >
-                      Reject
-                    </v-btn>
+                    />
 
                     <v-btn
                       size="small"
+                      icon="mdi-trash-can-outline"
                       rounded="lg"
                       variant="text"
                       color="error"
                       :disabled="placesStore.isSubmitting"
                       @click="openDeleteDialog(place)"
-                    >
-                      Delete
-                    </v-btn>
+                    />
                   </div>
                 </td>
               </tr>
@@ -225,12 +229,14 @@ import { useAdminStore } from "../stores/adminStore";
 import { useAuthStore } from "../stores/authStore";
 import { usePlacesStore } from "../stores/placesStore";
 
-type DashboardStatusFilter =
-  | "all"
-  | "approved"
-  | "pending"
-  | "rejected"
-  | "not-rejected";
+type DashboardSortKey =
+  | "name"
+  | "status"
+  | "rating"
+  | "reviews"
+  | "creator"
+  | "createdAt";
+type SortDirection = "asc" | "desc";
 
 const auth = useAuthStore();
 const adminStore = useAdminStore();
@@ -240,6 +246,7 @@ const isAdmin = computed(() => adminStore.isAdmin);
 const isCheckingAdmin = computed(() => adminStore.isChecking);
 const isUnlocked = computed(() => adminStore.isUnlocked);
 
+// Starts Google sign-in from the signed-out dashboard state.
 async function signIn() {
   try {
     await auth.signInWithGoogle();
@@ -248,18 +255,10 @@ async function signIn() {
   }
 }
 
-const searchText = ref("");
-const statusFilter = ref<DashboardStatusFilter>("all");
+const sortKey = ref<DashboardSortKey>("createdAt");
+const sortDirection = ref<SortDirection>("desc");
 const deleteDialog = ref(false);
 const placePendingDelete = ref<Place | null>(null);
-
-const statusOptions = [
-  { title: "All places", value: "all" },
-  { title: "Not rejected", value: "not-rejected" },
-  { title: "Approved", value: "approved" },
-  { title: "Pending", value: "pending" },
-  { title: "Rejected", value: "rejected" },
-];
 
 const statusColorMap: Record<ApprovalStatus, string> = {
   approved: "primary",
@@ -271,31 +270,63 @@ const rejectedPlaces = computed(() => {
   return placesStore.places.filter((place) => place.approvalStatus === "rejected");
 });
 
+// Sums the review counts already stored on each place record.
 const totalReviewCount = computed(() => {
   return placesStore.places.reduce((total, place) => total + place.reviews, 0);
 });
 
+// Returns a sorted copy so the store's original place order is not mutated.
 const filteredPlaces = computed(() => {
-  const query = searchText.value.trim().toLowerCase();
-
-  return placesStore.places.filter((place) => {
-    const matchesStatus =
-      statusFilter.value === "all" ||
-      (statusFilter.value === "not-rejected" &&
-        place.approvalStatus !== "rejected") ||
-      place.approvalStatus === statusFilter.value;
-
-    const matchesSearch =
-      query.length === 0 ||
-      place.name.toLowerCase().includes(query) ||
-      place.location.toLowerCase().includes(query) ||
-      place.tags.some((tag) => tag.toLowerCase().includes(query)) ||
-      (place.createdByName ?? "").toLowerCase().includes(query);
-
-    return matchesStatus && matchesSearch;
-  });
+  return [...placesStore.places].sort(comparePlaces);
 });
 
+// Compares text without caring about capitalization.
+function compareText(left: string, right: string) {
+  return left.localeCompare(right, undefined, { sensitivity: "base" });
+}
+
+// Applies the active sort key and direction to two place rows.
+function comparePlaces(left: Place, right: Place) {
+  const direction = sortDirection.value === "asc" ? 1 : -1;
+  let result = 0;
+
+  if (sortKey.value === "name") {
+    result = compareText(left.name, right.name);
+  } else if (sortKey.value === "status") {
+    result = compareText(left.approvalStatus, right.approvalStatus);
+  } else if (sortKey.value === "rating") {
+    result = left.rating - right.rating;
+  } else if (sortKey.value === "reviews") {
+    result = left.reviews - right.reviews;
+  } else if (sortKey.value === "creator") {
+    result = compareText(left.createdByName || "Unknown", right.createdByName || "Unknown");
+  } else {
+    result = (left.createdAt ?? 0) - (right.createdAt ?? 0);
+  }
+
+  return result * direction;
+}
+
+// Changes the active sort column, or toggles direction when clicking it again.
+function setSort(key: DashboardSortKey) {
+  if (sortKey.value === key) {
+    sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc";
+    return;
+  }
+
+  sortKey.value = key;
+  sortDirection.value =
+    key === "rating" || key === "reviews" || key === "createdAt" ? "desc" : "asc";
+}
+
+// Picks the icon shown beside each sortable table header.
+function sortIcon(key: DashboardSortKey) {
+  if (sortKey.value !== key) return "mdi-swap-vertical";
+
+  return sortDirection.value === "asc" ? "mdi-arrow-up" : "mdi-arrow-down";
+}
+
+// Updates a place moderation status through the admin-only store action.
 async function setPlaceStatus(placeId: string, approvalStatus: ApprovalStatus) {
   if (!isUnlocked.value) return;
 
@@ -306,11 +337,13 @@ async function setPlaceStatus(placeId: string, approvalStatus: ApprovalStatus) {
   }
 }
 
+// Opens the confirmation dialog for deleting a place.
 function openDeleteDialog(place: Place) {
   placePendingDelete.value = place;
   deleteDialog.value = true;
 }
 
+// Deletes the selected place after confirmation.
 async function confirmDelete() {
   if (!placePendingDelete.value || !isUnlocked.value) return;
 
@@ -323,6 +356,7 @@ async function confirmDelete() {
   }
 }
 
+// Formats Firestore millisecond timestamps for the table.
 function formatCreatedAt(createdAt?: number) {
   if (!createdAt) return "Unknown";
 
@@ -356,21 +390,21 @@ function formatCreatedAt(createdAt?: number) {
 
 .stat-label {
   font-size: 0.88rem;
-  color: #6b7280;
+  color: #4F638C;
 }
 
 .stat-value {
   margin-top: 8px;
   font-size: 1.7rem;
   font-weight: 700;
-  color: #172033;
+  color: #13155C;
 }
 
 .dashboard-card {
   overflow: hidden;
   background: rgba(255, 255, 255, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow: 0 22px 50px rgba(31, 45, 61, 0.08);
+  box-shadow: 0 22px 50px rgba(19, 21, 92, 0.08);
 }
 
 .dashboard-toolbar {
@@ -388,27 +422,13 @@ function formatCreatedAt(createdAt?: number) {
 .toolbar-title {
   font-size: 1.08rem;
   font-weight: 700;
-  color: #172033;
+  color: #13155C;
 }
 
 .toolbar-subtitle {
   margin-top: 6px;
   line-height: 1.5;
-  color: #6b7280;
-}
-
-.toolbar-actions {
-  display: flex;
-  gap: 12px;
-  width: min(100%, 460px);
-}
-
-.search-field {
-  flex: 1;
-}
-
-.status-field {
-  width: 170px;
+  color: #4F638C;
 }
 
 .table-wrap {
@@ -417,6 +437,23 @@ function formatCreatedAt(createdAt?: number) {
 
 .admin-table {
   min-width: 1180px;
+}
+
+.sort-header {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.sort-header:hover {
+  color: rgb(0, 50, 160);
 }
 
 .place-cell {
@@ -435,7 +472,7 @@ function formatCreatedAt(createdAt?: number) {
   height: 68px;
   object-fit: cover;
   border-radius: 14px;
-  background: #eef3f9;
+  background: #EEF4FF;
 }
 
 .place-copy {
@@ -444,58 +481,35 @@ function formatCreatedAt(createdAt?: number) {
 
 .place-name {
   font-weight: 700;
-  color: #172033;
+  color: #13155C;
 }
 
 .place-meta {
   margin-top: 4px;
   font-size: 0.88rem;
   line-height: 1.4;
-  color: #6b7280;
+  color: #4F638C;
 }
 
 .action-buttons {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+}
+
+.action-buttons :deep(.v-btn) {
+  width: 34px;
+  height: 34px;
 }
 
 .empty-row {
   text-align: center;
   padding: 26px 12px;
-  color: #6b7280;
+  color: #4F638C;
 }
 
 .empty-state {
   margin-top: 80px;
 }
 
-@media (max-width: 960px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .dashboard-toolbar {
-    flex-direction: column;
-  }
-
-  .toolbar-actions {
-    width: 100%;
-  }
-}
-
-@media (max-width: 640px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .toolbar-actions {
-    flex-direction: column;
-  }
-
-  .status-field {
-    width: 100%;
-  }
-}
 </style>

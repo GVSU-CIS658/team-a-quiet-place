@@ -1,5 +1,17 @@
+// Moderation state for places. Public browsing only shows approved places,
+// while admin screens can also work with pending and rejected places.
 export type ApprovalStatus = "approved" | "pending" | "rejected";
 
+// Campus area values used by places and location filters.
+export type LocationType = "Valley" | "Pew" | "Health";
+
+// Shared filters for place lists. A null value means "do not filter by this".
+export type PlaceFilters = {
+  location: LocationType | null;
+  rating: number | null;
+};
+
+// Review document shown under a place and created through the review form.
 export type Review = {
   id: string;
   placeId: string;
@@ -9,6 +21,7 @@ export type Review = {
   createdAt: number;
 };
 
+// Place document used by cards, saved places, filters, and admin moderation.
 export type Place = {
   id: string;
   name: string;
@@ -24,10 +37,10 @@ export type Place = {
   createdAt?: number;
 };
 
+// Saved-place document that connects one user to one saved place.
 export type Saves = {
   id: string;
   placeId: string;
   savedAt: number;
   user: string;
 };
-export type LocationType = "Valley" | "Pew" | "Health";

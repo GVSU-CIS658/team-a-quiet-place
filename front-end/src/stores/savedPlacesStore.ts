@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { usePlacesStore } from "./placesStore";
-import type { Place, Saves, LocationType } from "../types/data";
+import type { LocationType, Place, PlaceFilters, Saves } from "../types/data";
 import {
   addDoc,
   collection,
@@ -12,11 +12,6 @@ import {
   where,
 } from "firebase/firestore";
 import { auth, db } from "../firebase/firebase";
-
-type Filters = {
-  location: LocationType | null;
-  rating: number | null;
-};
 
 export const useSavedPlacesStore = defineStore("savedPlaces", {
   state: () => ({
@@ -115,7 +110,7 @@ export const useSavedPlacesStore = defineStore("savedPlaces", {
       }
     },
 
-    updateFilters(partial: Partial<Filters>) {
+    updateFilters(partial: Partial<PlaceFilters>) {
       this.filters = {
         ...this.filters,
         ...partial,

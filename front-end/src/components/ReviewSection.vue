@@ -106,18 +106,25 @@ const formRef = ref();
 const reviewText = ref("");
 const reviewRating = ref(4);
 
+const minReviewLength = 8;
+const maxReviewLength = 300;
+
 const rules = {
   required: (value: string) => !!value?.trim() || "Review text is required.",
   minReview: (value: string) =>
-    value.trim().length >= 8 || "Review must be at least 8 characters.",
+    value.trim().length >= minReviewLength ||
+    "Review must be at least 8 characters.",
   maxReview: (value: string) =>
-    value.trim().length <= 300 || "Review cannot exceed 300 characters.",
+    value.trim().length <= maxReviewLength ||
+    "Review cannot exceed 300 characters.",
 };
 
 const sortedReviews = computed(() => {
   return reviewsStore.getReviewsForPlace(props.placeId);
 });
 
+// Keep one live review listener for the current place, and clean up the old
+// place listener when this component is reused for a different place.
 watch(
   () => props.placeId,
   (placeId, previousPlaceId) => {
@@ -136,8 +143,18 @@ onBeforeUnmount(() => {
 
 const isRatingValid = computed(() => reviewRating.value > 0);
 
+const isReviewTextValid = computed(() => {
+  const length = reviewText.value.trim().length;
+
+  return length >= minReviewLength && length <= maxReviewLength;
+});
+
 const canSubmit = computed(() => {
-  return isRatingValid.value && !reviewsStore.isSubmitting;
+  return (
+    isRatingValid.value &&
+    isReviewTextValid.value &&
+    !reviewsStore.isSubmitting
+  );
 });
 
 async function requireLogin() {
@@ -149,6 +166,7 @@ async function requireLogin() {
 }
 
 async function submitReview() {
+  // Require a signed-in user before validating and sending the review.
   if (!auth.user) {
     await requireLogin();
 
@@ -190,7 +208,7 @@ function formatReviewDate(dateValue: number) {
 
 .review-form-card,
 .review-item {
-  background: #fbfcfe;
+  background: #F8FBFF;
 }
 
 .review-form-actions {
@@ -218,18 +236,18 @@ function formatReviewDate(dateValue: number) {
 .review-user {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #1f2d3d;
+  color: #13155C;
 }
 
 .review-date {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: #4F638C;
   margin-top: 2px;
 }
 
 .empty-review-text {
   text-align: center;
-  color: #6b7280;
+  color: #4F638C;
   font-size: 0.92rem;
   padding: 12px 0;
 }

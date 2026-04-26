@@ -55,17 +55,26 @@ import { computed, ref, watch } from "vue";
 import FilterFab from "../components/FilterFab.vue";
 import PlaceCard from "../components/PlaceCard.vue";
 import { usePlacesStore } from "../stores/placesStore";
+import { useSavedPlacesStore } from "../stores/savedPlacesStore";
 
 const placesStore = usePlacesStore();
+const savedPlacesStore = useSavedPlacesStore();
 
 const slideDirection = ref("slide-left");
 const currentIndex = ref(0);
 const filterDialog = ref(false);
 const hasPickedInitialPlace = ref(false);
 
-// Shows the place at the current index from the filtered approved list.
+// Browsing hides places the current user has already saved.
+const unsavedFilteredPlaces = computed(() => {
+  return placesStore.filteredPlaces.filter(
+    (place) => !savedPlacesStore.isSaved(place.id),
+  );
+});
+
+// Shows the place at the current index from the filtered unsaved list.
 const currentPlace = computed(() => {
-  const places = placesStore.filteredPlaces;
+  const places = unsavedFilteredPlaces.value;
 
   if (places.length === 0) return null;
 
@@ -74,7 +83,7 @@ const currentPlace = computed(() => {
 
 // Keeps the selected index valid when filters or place data change.
 watch(
-  () => placesStore.filteredPlaces,
+  unsavedFilteredPlaces,
   (places) => {
     if (places.length === 0) {
       currentIndex.value = 0;
@@ -97,7 +106,7 @@ watch(
 
 // Moves to the next filtered place and wraps back to the start.
 function nextPlace() {
-  const places = placesStore.filteredPlaces;
+  const places = unsavedFilteredPlaces.value;
   if (places.length === 0) return;
 
   slideDirection.value = "slide-left";
@@ -106,7 +115,7 @@ function nextPlace() {
 
 // Moves to the previous filtered place and wraps to the end.
 function previousPlace() {
-  const places = placesStore.filteredPlaces;
+  const places = unsavedFilteredPlaces.value;
   if (places.length === 0) return;
 
   slideDirection.value = "slide-right";
